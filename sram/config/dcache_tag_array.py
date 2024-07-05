@@ -4,8 +4,7 @@ num_rw_ports = 1
 num_r_ports = 0
 num_w_ports = 0
 
-word_size = 256
-write_size = 8
+word_size = 25
 num_words = 16
 
 nominal_corner_only = True
@@ -22,7 +21,7 @@ perimeter_pins = False
 load_scales = [0.5, 1, 4]
 slew_scales = [0.5, 1]
 
-output_name = "mp_dcache_data_array"
+output_name = "dcache_tag_array"
 output_path = f"output/{output_name}"
 
 print_banner = False
