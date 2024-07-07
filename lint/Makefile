@@ -1,9 +1,24 @@
 SHELL=/bin/bash -o pipefail
 .SHELLFLAGS += -e
 
-export PKG_SRCS = $(PWD)/../pkg/types.sv
-export HDL_SRCS = $(shell find $(PWD)/../hdl -name '*.sv')
-export SRAM_LIB = $(shell find $(PWD)/../sram/output/ -name '*.db')
+# Define ANSI Color Escape Codes
+BOLD='\033[1m'
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
+WHITE='\033[1;37m'
+RESET='\033[0m' # Reset text attributes to default
+
+# Directory paths
+DIGITAL_PATH := $(PWD)/../chip/digital
+
+export LINT_TOP := $(TOP)
+export PKG_SRCS := $(shell find $(DIGITAL_PATH)/pkg -name '*.svh')
+export RTL_SRCS := $(shell find $(DIGITAL_PATH)/rtl -name '*.sv')
+export SRAM_LIB := $(shell find $(PWD)/../sram/output/ -name '*.db')
 
 .PHONY: lint
 lint: clean
@@ -13,6 +28,14 @@ lint: clean
 	mv reports/moresimple_turbo.rpt reports/lint.rpt
 	rm -rf spyglass-1 WORK *.log
 	bash check_lint_error.sh
+
+.PHONY: info
+info:
+	@echo -e ${GREEN}WELCOME TO THE LINTER!${RESET}
+	@echo -e 
+	@echo -e ${GREEN}TOP is the top level module in 'chip/digital/rtl/...'${RESET}
+	@echo -e ${GREEN}Example: make lint TOP=...${RESET}
+	@echo -e 
 
 .PHONY: clean
 clean:

@@ -1,5 +1,5 @@
 module control_unit
-import rv32i_types::*;
+import rv32imc_types::*;
 (
   // Datapath Signals
   input logic [31:0] inst,
