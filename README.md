@@ -5,13 +5,11 @@
 > It is a mixed signal ASIC designed for TSMC's 65nm process node.
 
 ## Basic Code Guidelines
-- Set default tab key to `1` spaces
+- Set default tab key to `2` spaces
 - Follow the `80` character per line rule
   - For VSCode users, add `"editor.rulers": [80]` to `settings.json`
-- Add the following to the top of files:
-> //==============================================================================\
-> // License: Copyright ~ Acadia Microcontroller                                  \
-> // Author: [Author Name]                                                        \
-> // Date: [Date]                                                                 \
-> // Description: [Describe the file's purpose or contents]                       \
-> //==============================================================================
+- Follow simple syntax in RTL code
+- Comments should answer questions and explain: 
+  - why? what purpose does this block do?
+  - what does this block interface to?
+  - nontrivial reset conditions?

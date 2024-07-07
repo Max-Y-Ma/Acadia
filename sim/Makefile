@@ -17,21 +17,27 @@ export CLOCK_PERIOD_PS = $(shell python3 ../synth/get_clock.py)
 SHELL=/bin/bash -o pipefail
 .SHELLFLAGS += -e
 
+# Directory paths
+DIGITAL_PATH := $(PWD)/../chip/digital
+ANALOG_PATH  := $(PWD)/../chip/analog
+
 # Testbench sources
-PKG_SRCS  := $(PWD)/../pkg/types.sv
-HDL_SRCS  := $(shell find $(PWD)/../chip/digital -name '*.sv')
-HVL_SRCS  := $(shell find $(PWD)/../hvl -name '*.sv' -o -name '*.v')
-VC_SRCS   := $(shell find $(PWD)/../hvl/vc/$(DIR) -name '*.sv' -o -name '*.v')
-VC_INC    := +incdir+$(PWD)/../hvl/vc/$(DIR)
+PKG_SRCS  := $(shell find $(DIGITAL_PATH)/pkg -name '*.svh' -o -name '*.sv')
+RTL_SRCS  := $(shell find $(DIGITAL_PATH)/rtl -name '*.sv')
+VC_SRCS   := $(shell find $(DIGITAL_PATH)/tb/vc/$(DIR) -name '*.sv' -o -name '*.v')
+VC_INC    := +incdir+$(DIGITAL_PATH)/tb/vc/$(DIR)
 SRAM_SRCS := $(shell find $(PWD)/../sram/output -name '*.v')
 DW_IP     := $(shell python3 get_dw_ip.py)
-SRCS      := $(PKG_SRCS) $(HDL_SRCS) $(HVL_SRCS) $(VC_SRCS) $(SRAM_SRCS) $(DW_IP)
-TOP       := $(basename $(notdir $(shell find $(PWD)/../hvl/vc/$(DIR) -name 'top_tb**.sv')))
+SRCS      := $(PKG_SRCS) $(RTL_SRCS) $(VC_SRCS) $(SRAM_SRCS) $(DW_IP)
+TOP       := $(basename $(notdir $(shell find $(DIGITAL_PATH)/tb/vc/$(DIR) -name 'top_tb**.sv')))
+
+# Toggle UVM
+UVM_FLAGS := $(if $(TEST),$(VCS),)
 
 # Simulator arguments
 export VCS_ARCH_OVERRIDE=linux
-VCS_FLAGS := -full64 -lca -sverilog +lint=no -timescale=1ns/1ns \
--debug_acc+all -kdb -fsdb -suppress=LCA_FEATURES_ENABLED +incdir+$(DW)/sim_ver \
+VCS_FLAGS := -full64 -lca -sverilog -timescale=1ns/1ns -debug_acc+all -kdb \
+-fsdb -suppress=LCA_FEATURES_ENABLED +incdir+$(DW)/sim_ver \
 +define+DW_SUPPRESS_WARN
 
 .PHONY: info
@@ -40,20 +46,20 @@ info:
 	@echo -e 
 	@echo -e ${GREEN}make vc DIR=... TEST=...${RESET}
 	@echo -e 
-	@echo -e ${GREEN}DIR is the name of your directory in 'hvl/vc/...'${RESET}
+	@echo -e ${GREEN}DIR is the name of your directory in 'chip/digital/tb/vc/...'${RESET}
 	@echo -e ${GREEN}TEST is the name of your UVM test, UVM testbench specific${RESET}
 	@echo -e 
 	@echo -e ${GREEN}Example: make vc DIR=fifo TEST=fifo_test${RESET}
 	@echo -e 
 
 .PHONY: vc
-vc: $(VC_SRCS)
-	@echo -e ${GREEN}Running Verification Component: $(TOP) @ vc/$(DIR)${RESET}
+vc: $(SRCS)
+	@echo -e ${GREEN}Running Verification Component: $(TOP) @ /chip/digital/tb/vc/$(DIR)${RESET}
 	@echo -e ${GREEN}Running UVM TEST: $(TEST)${RESET}
 	mkdir -p sim
 	python3 ../bin/rvfi_reference.py
 	python3 set_dw_ip.py
-	cd sim && vcs $(VCS) $(VC_SRCS) $(VCS_FLAGS) $(VC_INC) -msg_config=../vcs_warn.config -l compile.log -top $(TOP) -o top_tb
+	cd sim && vcs $(UVM_FLAGS) $(SRCS) $(VCS_FLAGS) $(VC_INC) -msg_config=../vcs_warn.config -l compile.log -top $(TOP) -o top_tb
 	bash check_compile_error.sh
 	rm -f sim/dump.fsdb
 	python3 ../synth/get_clock.py
