@@ -1,4 +1,5 @@
 package rv32imc_types;
+
 // Typedefs for RV32I Instruction Format
 typedef enum bit [6:0] {
   op_lui   = 7'b0110111, // U load upper immediate 
@@ -11,6 +12,17 @@ typedef enum bit [6:0] {
   op_imm   = 7'b0010011, // I arith ops with register/immediate operands 
   op_reg   = 7'b0110011  // R arith ops with register operands 
 } rv32i_opcode_t;
+
+typedef enum bit [2:0] {
+  alu_add = 3'b000, // Check bit 30 for add/sub
+  alu_sll = 3'b001,
+  alu_sra = 3'b010,
+  alu_sub = 3'b011,
+  alu_xor = 3'b100,
+  alu_srl = 3'b101, // Check bit 30 for logical/arithmetic
+  alu_or  = 3'b110,
+  alu_and = 3'b111
+} rv32i_alu_opcode_t;
 
 typedef enum bit [2:0] {
   beq  = 3'b000,
@@ -56,17 +68,6 @@ typedef enum bit [2:0] {
   orr   = 3'b110,
   andr  = 3'b111
 } arith_reg_funct3_t;
-
-typedef enum bit [2:0] {
-  alu_add = 3'b000, // Check bit 30 for add/sub
-  alu_sll = 3'b001,
-  alu_sra = 3'b010,
-  alu_sub = 3'b011,
-  alu_xor = 3'b100,
-  alu_srl = 3'b101, // Check bit 30 for logical/arithmetic
-  alu_or  = 3'b110,
-  alu_and = 3'b111
-} rv32i_alu_opcode_t;
 
 // Typedefs for RV32I Datapath/Control Signals
 typedef enum bit {
@@ -257,5 +258,62 @@ typedef enum bit [1:0] {
   ss_rem = 2'b10,
   uu_rem = 2'b11
 } div_type_t;
+
+/* Constrained random types */
+
+typedef enum bit [6:0] {
+  base         = 7'b0000000,
+  variant      = 7'b0100000,
+  mult_variant = 7'b0000001
+} funct7_t;
+
+// Various ways RISC-V instruction words can be interpreted.
+// See page 104, Chapter 19 RV32/64G Instruction Set Listings
+// of the RISC-V v2.2 spec.
+typedef union packed {
+  bit [31:0] word;
+
+  struct packed {
+    bit [11:0] i_imm;
+    bit [4:0] rs1;
+    bit [2:0] funct3;
+    bit [4:0] rd;
+    rv32i_opcode_t opcode;
+  } i_type;
+
+  struct packed {
+    bit [6:0] funct7;
+    bit [4:0] rs2;
+    bit [4:0] rs1;
+    bit [2:0] funct3;
+    bit [4:0] rd;
+    rv32i_opcode_t opcode;
+  } r_type;
+
+  struct packed {
+    bit [11:5] imm_s_top;
+    bit [4:0]  rs2;
+    bit [4:0]  rs1;
+    bit [2:0]  funct3;
+    bit [4:0]  imm_s_bot;
+    rv32i_opcode_t opcode;
+  } s_type;
+
+  struct packed {
+    bit [11:5] imm_b_top;
+    bit [4:0]  rs2;
+    bit [4:0]  rs1;
+    bit [2:0]  funct3;
+    bit [4:0]  imm_b_bot;
+    rv32i_opcode_t opcode;
+  } b_type;
+
+  struct packed {
+    bit [31:12] imm;
+    bit [4:0]  rd;
+    rv32i_opcode_t opcode;
+  } j_type;
+
+} instr_t;
 
 endpackage

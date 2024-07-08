@@ -1,5 +1,5 @@
 // Toggle Test Types
-// `define CONSTRAINED_RANDOM  // Comment out for directed tests
+`define CONSTRAINED_RANDOM  // Comment out for directed tests
 
 `ifdef CONSTRAINED_RANDOM
     `include "cpu_pkg.svh"
