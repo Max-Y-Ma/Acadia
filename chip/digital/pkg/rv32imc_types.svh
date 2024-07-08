@@ -1,6 +1,8 @@
 package rv32imc_types;
 
-// Typedefs for RV32I Instruction Format
+/******************************************************************************\
+  Instruction format typedefs
+\******************************************************************************/
 typedef enum bit [6:0] {
   op_lui   = 7'b0110111, // U load upper immediate 
   op_auipc = 7'b0010111, // U add upper immediate PC 
@@ -11,7 +13,7 @@ typedef enum bit [6:0] {
   op_store = 7'b0100011, // S store 
   op_imm   = 7'b0010011, // I arith ops with register/immediate operands 
   op_reg   = 7'b0110011  // R arith ops with register operands 
-} rv32i_opcode_t;
+} rv32_inst_opcode_t;
 
 typedef enum bit [2:0] {
   alu_add = 3'b000, // Check bit 30 for add/sub
@@ -22,7 +24,7 @@ typedef enum bit [2:0] {
   alu_srl = 3'b101, // Check bit 30 for logical/arithmetic
   alu_or  = 3'b110,
   alu_and = 3'b111
-} rv32i_alu_opcode_t;
+} rv32_alu_opcode_t;
 
 typedef enum bit [2:0] {
   beq  = 3'b000,
@@ -56,7 +58,7 @@ typedef enum bit [2:0] {
   sri   = 3'b101, // Check bit 30 for logical/arithmetic
   ori   = 3'b110,
   andi  = 3'b111
-} arith_funct3_t;
+} arith_imm_funct3_t;
 
 typedef enum bit [2:0] {
   addr  = 3'b000,
@@ -68,176 +70,6 @@ typedef enum bit [2:0] {
   orr   = 3'b110,
   andr  = 3'b111
 } arith_reg_funct3_t;
-
-// Typedefs for RV32I Datapath/Control Signals
-typedef enum bit {
-  pc_next = 1'b0,
-  pc_offset = 1'b1
-} pc_mux_t;
-
-typedef enum bit {
-  rs1_out = 1'b0,
-  pc_out = 1'b1
-} alu1_mux_t;
-
-typedef enum bit {
-  rs2_out = 1'b0,
-  imm_out = 1'b1
-} alu2_mux_t;
-
-typedef enum bit [1:0] {
-  a_source = 2'b00,
-  a_ex_source = 2'b01,
-  a_mem_source = 2'b10
-} a_forward_mux_t;
-
-typedef enum bit [1:0] {
-  b_source = 2'b00,
-  b_ex_source = 2'b01,
-  b_mem_source = 2'b10
-} b_forward_mux_t;
-
-typedef enum bit {
-  rs2_cmp = 1'b0,
-  imm_cmp = 1'b1
-} cmp_mux_t;
-
-typedef enum bit {
-  pc_op  = 1'b0,
-  rs1_op = 1'b1
-} target_addr_mux_t;
-
-typedef enum bit [1:0] {
-  f_out   = 2'b00,
-  cmp_out = 2'b01,
-  addr_out  = 2'b10
-} aluout_mux_t;
-
-typedef enum bit {
-  mem_rdata_out = 1'b0,
-  alu_out       = 1'b1
-} wb_mux_t;
-
-typedef enum bit {
-  control_out = 1'b0,
-  stall_out = 1'b1
-} ctrl_mux_t;
-
-// Execute State Control Signals
-typedef struct packed {
-  alu1_mux_t   alu1_mux;
-  alu2_mux_t   alu2_mux;
-  aluout_mux_t aluout_mux;
-  target_addr_mux_t target_addr_mux;
-  logic        branch;
-  logic [2:0]  alu_op;
-  logic [2:0]  cmp_op;
-} ex_ctrl_t;
-
-// Memory State Control Signals
-typedef struct packed {
-  logic       mem_write;
-  logic       mem_read;
-  logic [2:0] mem_funct3;
-} mem_ctrl_t;
-
-// Writeback State Control Signals
-typedef struct packed {
-  wb_mux_t     wb_mux;
-  logic [2:0]  mem_funct3;
-  logic        regf_we;
-} wb_ctrl_t;
-
-// Typedefs for RVFI Monitor Signals
-typedef struct packed {
-  // Required Signals
-  logic        valid;
-  logic [63:0] order;
-  logic [31:0] inst;
-  logic [4:0]  rs1_addr;
-  logic [4:0]  rs2_addr;
-  logic [31:0] rs1_rdata;
-  logic [31:0] rs2_rdata;
-  logic [4:0]  rd_addr;
-  logic [31:0] rd_wdata;
-  logic [31:0] pc_rdata;
-  logic [31:0] pc_wdata;
-  logic [31:0] mem_addr;
-  logic [3:0]  mem_rmask;
-  logic [3:0]  mem_wmask;
-  logic [31:0] mem_rdata;
-  logic [31:0] mem_wdata;
-} rvfi_signal_t;
-
-// Typedefs for RV32I Pipeline Stages
-typedef struct packed {
-  // RVFI Signals
-  rvfi_signal_t rvfi;
-
-  // Data Signals
-  logic [31:0] pc;
-  logic [31:0] pc_next;
-} if_stage_t;
-
-typedef struct packed {
-  // RVFI Signals
-  rvfi_signal_t rvfi;
-
-  // Data Signals
-  logic [31:0] pc;
-  logic [31:0] pc_next;
-  
-  // Instruction Signals
-  logic [4:0]  rs1_addr;
-  logic [4:0]  rs2_addr;
-  logic [4:0]  rd_addr;
-  logic [31:0] imm;
-  logic [31:0] rs1_rdata;
-  logic [31:0] rs2_rdata;
-
-  // Control Signals
-  ex_ctrl_t  ex_ctrl;
-  mem_ctrl_t mem_ctrl;
-  wb_ctrl_t  wb_ctrl;
-} id_stage_t;
-
-typedef struct packed {
-  // RVFI Signals
-  rvfi_signal_t rvfi;
-
-  // Data Signals
-  logic [31:0] alu_out;
-  logic [31:0] pc_next;
-
-  // Instruction Signals
-  logic [4:0]  rd_addr;
-  logic [31:0] rs2_rdata;
-
-  // Control Signals
-  mem_ctrl_t mem_ctrl;
-  wb_ctrl_t wb_ctrl;
-} ex_stage_t;
-
-typedef struct packed {
-  // RVFI Signals
-  rvfi_signal_t rvfi;
-
-  // Data Signals
-  logic [31:0] alu_out;
-  logic [31:0] pc_next;
-
-  // Instruction Signals
-  logic [4:0]  rd_addr;
-
-  // Control Signals
-  mem_ctrl_t mem_ctrl;
-  wb_ctrl_t wb_ctrl;
-} mem_stage_t;
-
-typedef struct packed {
-  // RVFI Signals
-  rvfi_signal_t rvfi;
-} wb_stage_t;
 
 typedef enum bit [2:0] { 
   mulr    = 3'b000,
@@ -259,8 +91,164 @@ typedef enum bit [1:0] {
   uu_rem = 2'b11
 } div_type_t;
 
-/* Constrained random types */
+/******************************************************************************\
+  Datapath and control signal typedefs
+\******************************************************************************/
+typedef enum bit {
+  pc_next   = 1'b0,
+  pc_offset = 1'b1
+} pc_mux_t;
 
+typedef enum bit {
+  rs1_out = 1'b0,
+  pc_out  = 1'b1
+} alu1_mux_t;
+
+typedef enum bit {
+  rs2_out = 1'b0,
+  imm_out = 1'b1
+} alu2_mux_t;
+
+typedef enum bit [1:0] {
+  id_source  = 2'b00,
+  ex_source  = 2'b01,
+  mem_source = 2'b10
+} forward_mux_t;
+
+typedef enum bit {
+  rs2_cmp = 1'b0,
+  imm_cmp = 1'b1
+} cmp_mux_t;
+
+typedef enum bit {
+  pc_op  = 1'b0,
+  rs1_op = 1'b1
+} target_addr_mux_t;
+
+typedef enum bit [1:0] {
+  f_out     = 2'b00,
+  cmp_out   = 2'b01,
+  addr_out  = 2'b10
+} aluout_mux_t;
+
+typedef enum bit {
+  mem_rdata_out = 1'b0,
+  alu_out       = 1'b1
+} wb_mux_t;
+
+typedef enum bit {
+  control_out = 1'b0,
+  stall_out   = 1'b1
+} ctrl_mux_t;
+
+/******************************************************************************\
+  Pipeline stage typedefs
+\******************************************************************************/
+
+// Control signals
+typedef struct packed {
+  alu1_mux_t   alu1_mux;
+  alu2_mux_t   alu2_mux;
+  aluout_mux_t aluout_mux;
+  target_addr_mux_t target_addr_mux;
+  logic        branch;
+  logic [2:0]  alu_op;
+  logic [2:0]  cmp_op;
+} ex_ctrl_t;
+
+typedef struct packed {
+  logic       mem_write;
+  logic       mem_read;
+  logic [2:0] mem_funct3;
+} mem_ctrl_t;
+
+typedef struct packed {
+  wb_mux_t     wb_mux;
+  logic [2:0]  mem_funct3;
+  logic        regf_we;
+} wb_ctrl_t;
+
+typedef struct packed {
+  logic        valid;
+  logic [63:0] order;
+  logic [31:0] inst;
+  logic [4:0]  rs1_addr;
+  logic [4:0]  rs2_addr;
+  logic [31:0] rs1_rdata;
+  logic [31:0] rs2_rdata;
+  logic [4:0]  rd_addr;
+  logic [31:0] rd_wdata;
+  logic [31:0] pc_rdata;
+  logic [31:0] pc_wdata;
+  logic [31:0] mem_addr;
+  logic [3:0]  mem_rmask;
+  logic [3:0]  mem_wmask;
+  logic [31:0] mem_rdata;
+  logic [31:0] mem_wdata;
+} rvfi_signal_t;
+
+// Pipeline Stages
+typedef struct packed {
+  rvfi_signal_t rvfi;
+
+  // Datapath Signals
+  logic [31:0] pc;
+  logic [31:0] pc_next;
+} if_stage_t;
+
+typedef struct packed {
+  rvfi_signal_t rvfi;
+
+  // Datapath Signals
+  logic [31:0] pc;
+  logic [31:0] pc_next;
+  
+  // Control Signals
+  logic [4:0]  rs1_addr;
+  logic [4:0]  rs2_addr;
+  logic [4:0]  rd_addr;
+  logic [31:0] imm;
+  logic [31:0] rs1_rdata;
+  logic [31:0] rs2_rdata;
+  ex_ctrl_t    ex_ctrl;
+  mem_ctrl_t   mem_ctrl;
+  wb_ctrl_t    wb_ctrl;
+} id_stage_t;
+
+typedef struct packed {
+  rvfi_signal_t rvfi;
+
+  // Datapath Signals
+  logic [31:0] alu_out;
+  logic [31:0] pc_next;
+
+  // Control Signals
+  logic [4:0]  rd_addr;
+  logic [31:0] rs2_rdata;
+  mem_ctrl_t   mem_ctrl;
+  wb_ctrl_t    wb_ctrl;
+} ex_stage_t;
+
+typedef struct packed {
+  rvfi_signal_t rvfi;
+
+  // Data Signals
+  logic [31:0] alu_out;
+  logic [31:0] pc_next;
+
+  // Control Signals
+  logic [4:0]  rd_addr;
+  mem_ctrl_t   mem_ctrl;
+  wb_ctrl_t    wb_ctrl;
+} mem_stage_t;
+
+typedef struct packed {
+  rvfi_signal_t rvfi;
+} wb_stage_t;
+
+/******************************************************************************\
+  Constrained random typedefs
+\******************************************************************************/
 typedef enum bit [6:0] {
   base         = 7'b0000000,
   variant      = 7'b0100000,
@@ -278,7 +266,7 @@ typedef union packed {
     bit [4:0] rs1;
     bit [2:0] funct3;
     bit [4:0] rd;
-    rv32i_opcode_t opcode;
+    rv32_inst_opcode_t opcode;
   } i_type;
 
   struct packed {
@@ -287,7 +275,7 @@ typedef union packed {
     bit [4:0] rs1;
     bit [2:0] funct3;
     bit [4:0] rd;
-    rv32i_opcode_t opcode;
+    rv32_inst_opcode_t opcode;
   } r_type;
 
   struct packed {
@@ -296,7 +284,7 @@ typedef union packed {
     bit [4:0]  rs1;
     bit [2:0]  funct3;
     bit [4:0]  imm_s_bot;
-    rv32i_opcode_t opcode;
+    rv32_inst_opcode_t opcode;
   } s_type;
 
   struct packed {
@@ -305,15 +293,15 @@ typedef union packed {
     bit [4:0]  rs1;
     bit [2:0]  funct3;
     bit [4:0]  imm_b_bot;
-    rv32i_opcode_t opcode;
+    rv32_inst_opcode_t opcode;
   } b_type;
 
   struct packed {
     bit [31:12] imm;
     bit [4:0]  rd;
-    rv32i_opcode_t opcode;
+    rv32_inst_opcode_t opcode;
   } j_type;
 
 } instr_t;
 
-endpackage
+endpackage : rv32imc_types

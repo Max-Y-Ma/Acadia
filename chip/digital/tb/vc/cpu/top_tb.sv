@@ -1,8 +1,5 @@
-// Toggle Test Types
-`define CONSTRAINED_RANDOM  // Comment out for directed tests
-
-`ifdef CONSTRAINED_RANDOM
-    `include "cpu_pkg.svh"
+`ifdef RANDOM
+  `include "cpu_pkg.svh"
 `endif
 
 module top_tb;
@@ -11,7 +8,7 @@ timeunit 1ps;
 timeprecision 1ps;
 
 // UVM Imports
-`ifdef CONSTRAINED_RANDOM
+`ifdef RANDOM
   import uvm_pkg::*;
   `include "uvm_macros.svh"
 `endif
@@ -32,7 +29,7 @@ mon_itf mon_itf(.*);
 monitor monitor(.itf(mon_itf));
 
 // Test Suite
-`ifdef CONSTRAINED_RANDOM
+`ifdef RANDOM
   initial begin
     // UVM Constrained Random Tests
     uvm_config_db #(virtual mem_itf)::set(null, "*", "mem_itf_i", mem_itf_i);

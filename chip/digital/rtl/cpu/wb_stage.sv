@@ -100,18 +100,18 @@ always_ff @(posedge clk) begin
     wb_stage_reg.rvfi <= '0;
   end else if (wb_reg_we) begin
     // Latch Data Signals
-    wb_stage_reg.rvfi.valid <= mem_stage_reg.rvfi.valid;
-    wb_stage_reg.rvfi.order <= mem_stage_reg.rvfi.order;
-    wb_stage_reg.rvfi.inst <= mem_stage_reg.rvfi.inst;
-    wb_stage_reg.rvfi.rs1_addr <= mem_stage_reg.rvfi.rs1_addr;
-    wb_stage_reg.rvfi.rs2_addr <= mem_stage_reg.rvfi.rs2_addr;
+    wb_stage_reg.rvfi.valid     <= mem_stage_reg.rvfi.valid;
+    wb_stage_reg.rvfi.order     <= mem_stage_reg.rvfi.order;
+    wb_stage_reg.rvfi.inst      <= mem_stage_reg.rvfi.inst;
+    wb_stage_reg.rvfi.rs1_addr  <= mem_stage_reg.rvfi.rs1_addr;
+    wb_stage_reg.rvfi.rs2_addr  <= mem_stage_reg.rvfi.rs2_addr;
     wb_stage_reg.rvfi.rs1_rdata <= mem_stage_reg.rvfi.rs1_rdata;
     wb_stage_reg.rvfi.rs2_rdata <= mem_stage_reg.rvfi.rs2_rdata;
-    wb_stage_reg.rvfi.rd_addr <= mem_stage_reg.rvfi.rd_addr;
-    wb_stage_reg.rvfi.rd_wdata <= o_write_data;
-    wb_stage_reg.rvfi.pc_rdata <= mem_stage_reg.rvfi.pc_rdata;
-    wb_stage_reg.rvfi.pc_wdata <= mem_stage_reg.rvfi.pc_wdata;
-    wb_stage_reg.rvfi.mem_addr <= mem_stage_reg.rvfi.mem_addr;
+    wb_stage_reg.rvfi.rd_addr   <= mem_stage_reg.rvfi.rd_addr;
+    wb_stage_reg.rvfi.rd_wdata  <= o_write_data;
+    wb_stage_reg.rvfi.pc_rdata  <= mem_stage_reg.rvfi.pc_rdata;
+    wb_stage_reg.rvfi.pc_wdata  <= mem_stage_reg.rvfi.pc_wdata;
+    wb_stage_reg.rvfi.mem_addr  <= mem_stage_reg.rvfi.mem_addr;
     wb_stage_reg.rvfi.mem_rmask <= mem_stage_reg.rvfi.mem_rmask;
     wb_stage_reg.rvfi.mem_wmask <= mem_stage_reg.rvfi.mem_wmask;
     wb_stage_reg.rvfi.mem_rdata <= mem_rdata_sync;

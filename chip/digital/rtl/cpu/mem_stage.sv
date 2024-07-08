@@ -15,8 +15,8 @@ import rv32imc_types::*;
   output logic [31:0] dmem_wdata,
 
   // Pipeline Stage Registers
-  input  ex_stage_t   ex_stage_reg,
-  output mem_stage_t  mem_stage_reg
+  input  ex_stage_t  ex_stage_reg,
+  output mem_stage_t mem_stage_reg
 );
 
 // We only want to read/write from data memory once, despite stall cycles
@@ -26,7 +26,7 @@ always_ff @(posedge clk) begin
   if (rst || mem_reg_we) begin
     dmem_mask_en <= 1'b1;
   end 
-  // We are not allowed to read on stall cycles
+  // We are not allowed to read after a stall cycles
   else begin
     dmem_mask_en <= 1'b0;
   end

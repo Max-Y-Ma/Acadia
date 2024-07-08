@@ -26,10 +26,10 @@ wb_stage_t  wb_stage_reg;
 
 // Stall Signals and Logic
 logic i_id_reg_we;
-logic i_pc_we;
+logic pc_we;
 
 // Flush Signals
-logic i_flush;
+logic flush;
 
 // Indicates that instruction memory has finished reading
 // This signal stays high until the stall cycles complete
@@ -45,19 +45,19 @@ logic id_reg_we;
 logic ex_reg_we; 
 logic mem_reg_we;
 logic wb_reg_we; 
-assign if_reg_we = i_id_reg_we & i_pc_we & !i_flush & imem_ready & dmem_ready;
-assign id_reg_we = imem_ready & dmem_ready;
-assign ex_reg_we = imem_ready & dmem_ready;
+assign if_reg_we  = i_id_reg_we & pc_we & !flush & imem_ready & dmem_ready;
+assign id_reg_we  = imem_ready & dmem_ready;
+assign ex_reg_we  = imem_ready & dmem_ready;
 assign mem_reg_we = imem_ready & dmem_ready;
-assign wb_reg_we = imem_ready & dmem_ready;
+assign wb_reg_we  = imem_ready & dmem_ready;
 
-pc_mux_t     i_pc_mux;
-logic [31:0] i_pc_imm;
+pc_mux_t     pc_mux;
+logic [31:0] pc_imm;
 if_stage if_stage (
   .clk          (clk),
   .rst          (rst),
-  .i_pc_mux     (i_pc_mux),
-  .i_pc_imm     (i_pc_imm),
+  .i_pc_mux     (pc_mux),
+  .i_pc_imm     (pc_imm),
   .if_reg_we    (if_reg_we),
   .imem_resp    (imem_resp),
   .imem_addr    (imem_addr),
@@ -74,11 +74,11 @@ id_stage id_stage (
   .i_regf_we     (i_regf_we),
   .i_rd_addr     (i_rd_addr),
   .i_rd_wdata    (i_write_data),
-  .i_flush       (i_flush),
+  .i_flush       (flush),
   .id_reg_we     (id_reg_we),
   .imem_ready    (imem_ready),
   .o_id_reg_we   (i_id_reg_we),
-  .o_pc_we       (i_pc_we),
+  .o_pc_we       (pc_we),
   .imem_rmask    (imem_rmask),
   .imem_rdata    (imem_rdata),
   .imem_resp     (imem_resp),
@@ -89,10 +89,10 @@ id_stage id_stage (
 ex_stage ex_stage (
   .clk           (clk),
   .rst           (rst),
-  .o_pc_mux      (i_pc_mux),
-  .o_pc_imm      (i_pc_imm),
+  .o_pc_mux      (pc_mux),
+  .o_pc_imm      (pc_imm),
   .ex_reg_we     (ex_reg_we),
-  .o_flush       (i_flush),
+  .o_flush       (flush),
   .i_wb_data     (i_write_data),
   .id_stage_reg  (id_stage_reg),
   .mem_stage_reg (mem_stage_reg),

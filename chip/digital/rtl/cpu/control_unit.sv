@@ -74,15 +74,15 @@ always_comb begin
     op_lui: begin
       // Datapath
       o_rs1_addr = '0;
-      o_rd_addr = rd_addr;
-      o_imm = u_imm;
+      o_rd_addr  = rd_addr;
+      o_imm      = u_imm;
       
       // Execute
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.alu_op   = alu_add;
 
       // Write Back
-      wb_ctrl.wb_mux = alu_out;
+      wb_ctrl.wb_mux  = alu_out;
       wb_ctrl.regf_we = 1'b1;
     end
     /**
@@ -96,15 +96,15 @@ always_comb begin
     op_auipc: begin
       // Datapath
       o_rd_addr = rd_addr;
-      o_imm = u_imm;
+      o_imm     = u_imm;
 
       // Execute
       ex_ctrl.alu1_mux = pc_out;
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.alu_op   = alu_add;
 
       // Write Back
-      wb_ctrl.wb_mux = alu_out;
+      wb_ctrl.wb_mux  = alu_out;
       wb_ctrl.regf_we = 1'b1;
     end
     /**
@@ -142,14 +142,14 @@ always_comb begin
     */
     op_jalr: begin
       // Datapath
-      o_rs1_addr      = rs1_addr; // Garuntee Branch
-      o_rs2_addr      = rs1_addr; // Garuntee Branch
-      o_rd_addr       = rd_addr;
-      o_imm           = i_imm;
+      o_rs1_addr = rs1_addr; // Garuntee Branch
+      o_rs2_addr = rs1_addr; // Garuntee Branch
+      o_rd_addr  = rd_addr;
+      o_imm      = i_imm;
 
       // Execute
-      ex_ctrl.cmp_op     = beq;      // Garuntee Branch
-      ex_ctrl.aluout_mux = addr_out; 
+      ex_ctrl.cmp_op          = beq;      // Garuntee Branch
+      ex_ctrl.aluout_mux      = addr_out; 
       ex_ctrl.target_addr_mux = rs1_op;
       ex_ctrl.branch          = '1;
 
@@ -193,11 +193,11 @@ always_comb begin
     */
     op_br: begin
       // Datapath
-      o_rs1_addr = rs1_addr;
-      o_rs2_addr = rs2_addr;
-      o_imm      = b_imm;
+      o_rs1_addr     = rs1_addr;
+      o_rs2_addr     = rs2_addr;
+      o_imm          = b_imm;
       ex_ctrl.cmp_op = funct3;
-      ex_ctrl.branch          = '1;
+      ex_ctrl.branch = '1;
     end
     /**
     * The Load Byte (LB) instruction, moves a byte from memory to register. 
@@ -226,22 +226,22 @@ always_comb begin
     op_load: begin
       // Datapath
       o_rs1_addr = rs1_addr;
-      o_rd_addr = rd_addr;
-      o_imm = i_imm;
+      o_rd_addr  = rd_addr;
+      o_imm      = i_imm;
 
       // Execute
       ex_ctrl.alu1_mux = rs1_out;
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.alu_op   = alu_add;
 
       // Data Memory
-      mem_ctrl.mem_read  = 1'b1;
+      mem_ctrl.mem_read   = 1'b1;
       mem_ctrl.mem_funct3 = funct3;
 
       // Write Back
-      wb_ctrl.wb_mux = mem_rdata_out;
+      wb_ctrl.wb_mux     = mem_rdata_out;
       wb_ctrl.mem_funct3 = funct3;
-      wb_ctrl.regf_we = 1'b1;
+      wb_ctrl.regf_we    = 1'b1;
     end
     /**
     * Store Byte (SB), stores 8-bit values from a register to memory.
@@ -259,15 +259,15 @@ always_comb begin
       // Datapath
       o_rs1_addr = rs1_addr;
       o_rs2_addr = rs2_addr;
-      o_imm = s_imm;
+      o_imm      = s_imm;
 
       // Execute
       ex_ctrl.alu1_mux = rs1_out;
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.alu_op   = alu_add;
 
       // Data Memory
-      mem_ctrl.mem_write = 1'b1;
+      mem_ctrl.mem_write  = 1'b1;
       mem_ctrl.mem_funct3 = funct3;
     end
     /**
@@ -343,7 +343,8 @@ always_comb begin
         sri : begin
           if (funct7 == 7'h20) begin
             ex_ctrl.alu_op = alu_sra;
-          end else begin
+          end 
+          else begin
             ex_ctrl.alu_op = alu_srl;
           end
         end
@@ -411,7 +412,8 @@ always_comb begin
         addr : begin
           if (funct7 == 7'h20) begin
             ex_ctrl.alu_op = alu_sub;
-          end else begin
+          end 
+          else begin
             ex_ctrl.alu_op = alu_add;
           end
         end
@@ -428,7 +430,8 @@ always_comb begin
         srr : begin
           if (funct7 == 7'h20) begin
             ex_ctrl.alu_op = alu_sra;
-          end else begin
+          end 
+          else begin
             ex_ctrl.alu_op = alu_srl;
           end
         end

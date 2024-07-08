@@ -34,6 +34,9 @@ TOP       := $(basename $(notdir $(shell find $(DIGITAL_PATH)/tb/vc/$(DIR) -name
 # Toggle UVM
 UVM_FLAGS := $(if $(TEST),$(VCS),)
 
+# Command line switches
+DEFINE_FLAGS := $(addprefix +define+, $(DEFINE))
+
 # Simulator arguments
 export VCS_ARCH_OVERRIDE=linux
 VCS_FLAGS := -full64 -lca -sverilog -timescale=1ns/1ns -debug_acc+all -kdb \
@@ -44,9 +47,10 @@ VCS_FLAGS := -full64 -lca -sverilog -timescale=1ns/1ns -debug_acc+all -kdb \
 info:
 	@echo -e ${GREEN}WELCOME TO THE CUSTOM TEST SUITE!${RESET}
 	@echo -e 
-	@echo -e ${GREEN}make vc DIR=... TEST=...${RESET}
+	@echo -e ${GREEN}make vc DIR=... DEFINE=... TEST=...${RESET}
 	@echo -e 
 	@echo -e ${GREEN}DIR is the name of your directory in 'chip/digital/tb/vc/...'${RESET}
+	@echo -e ${GREEN}DEFINE includes any CLI defines to alter testbench behavior${RESET}
 	@echo -e ${GREEN}TEST is the name of your UVM test, UVM testbench specific${RESET}
 	@echo -e 
 	@echo -e ${GREEN}Example: make vc DIR=fifo TEST=fifo_test${RESET}
@@ -59,7 +63,7 @@ vc: $(SRCS)
 	mkdir -p sim
 	python3 ../bin/rvfi_reference.py
 	python3 set_dw_ip.py
-	cd sim && vcs $(UVM_FLAGS) $(SRCS) $(VCS_FLAGS) $(VC_INC) -msg_config=../vcs_warn.config -l compile.log -top $(TOP) -o top_tb
+	cd sim && vcs $(UVM_FLAGS) $(DEFINE_FLAGS) $(SRCS) $(VCS_FLAGS) $(VC_INC) -msg_config=../vcs_warn.config -l compile.log -top $(TOP) -o top_tb
 	bash check_compile_error.sh
 	rm -f sim/dump.fsdb
 	python3 ../synth/get_clock.py

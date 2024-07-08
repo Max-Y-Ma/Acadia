@@ -25,8 +25,8 @@ import rv32imc_types::*;
 );
 
 // Forwarding Unit
-a_forward_mux_t forward_a;
-b_forward_mux_t forward_b;
+forward_mux_t fwd_src_a;
+forward_mux_t fwd_src_b;
 forwarding_unit forwarding_unit (
   .rs1_addr    (id_stage_reg.rs1_addr),
   .rs2_addr    (id_stage_reg.rs2_addr),
@@ -34,46 +34,53 @@ forwarding_unit forwarding_unit (
   .mem_rd_addr (mem_stage_reg.rd_addr),
   .ex_regf_we  (ex_stage_reg.wb_ctrl.regf_we),
   .mem_regf_we (mem_stage_reg.wb_ctrl.regf_we),
-  .forward_a   (forward_a),
-  .forward_b   (forward_b)
+  .fwd_src_a   (fwd_src_a),
+  .fwd_src_b   (fwd_src_b)
 );
 
 // ALU Source Operands
 logic [31:0] a, b;
-logic [31:0] forward_a_op, forward_b_op;
+logic [31:0] fwd_src_a_data, fwd_src_b_data;
 always_comb begin
   // Default Values
-  a = '0; forward_a_op = '0;
-  b = '0; forward_b_op = '0;
+  a = '0; fwd_src_a_data = '0;
+  b = '0; fwd_src_b_data = '0;
 
-  // Forwarding ALU Values
-  if (forward_a == a_ex_source) begin
-    forward_a_op = ex_stage_reg.alu_out;
-  end else if (forward_a == a_mem_source) begin
-    forward_a_op = i_wb_data;
-  end else begin
-    forward_a_op = id_stage_reg.rs1_rdata;
+  // Assign RS1 data based on forwarding unit
+  if (fwd_src_a == ex_source) begin
+    fwd_src_a_data = ex_stage_reg.alu_out;
+  end 
+  else if (fwd_src_a == mem_source) begin
+    fwd_src_a_data = i_wb_data;
+  end 
+  else begin
+    fwd_src_a_data = id_stage_reg.rs1_rdata;
   end
 
-  if (forward_b == b_ex_source) begin
-    forward_b_op = ex_stage_reg.alu_out;
-  end else if (forward_b == b_mem_source) begin
-    forward_b_op = i_wb_data;
-  end else begin
-    forward_b_op = id_stage_reg.rs2_rdata;
+  // Assign RS2 data based on forwarding unit
+  if (fwd_src_b == ex_source) begin
+    fwd_src_b_data = ex_stage_reg.alu_out;
+  end 
+  else if (fwd_src_b == mem_source) begin
+    fwd_src_b_data = i_wb_data;
+  end 
+  else begin
+    fwd_src_b_data = id_stage_reg.rs2_rdata;
   end
   
-  // Decoded ALU Values
+  // Operand multiplexers
   if (id_stage_reg.ex_ctrl.alu1_mux == pc_out) begin
     a = id_stage_reg.pc;
-  end else begin
-    a = forward_a_op;
+  end 
+  else begin
+    a = fwd_src_a_data;
   end
 
   if (id_stage_reg.ex_ctrl.alu2_mux == imm_out) begin
     b = id_stage_reg.imm;
-  end else begin
-    b = forward_b_op;
+  end 
+  else begin
+    b = fwd_src_b_data;
   end
 end
 
@@ -100,17 +107,22 @@ logic [31:0] alu_out;
 always_comb begin
   if (id_stage_reg.ex_ctrl.aluout_mux == cmp_out) begin
     alu_out = {31'd0, br_en};
-  end else if (id_stage_reg.ex_ctrl.aluout_mux == addr_out) begin
+  end 
+  else if (id_stage_reg.ex_ctrl.aluout_mux == addr_out) begin
     alu_out = id_stage_reg.pc + 'h4;
-  end else begin
+  end 
+  else begin
     alu_out = f;
   end
 end
 
 // Branch Logic
+logic  branch_taken;
+assign branch_taken = id_stage_reg.ex_ctrl.branch & br_en;
+
 logic [31:0] target_op, target_addr, pc_imm;
 always_comb begin
-  target_op = (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op) ? forward_a_op : id_stage_reg.pc;
+  target_op = (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op) ? fwd_src_a_data : id_stage_reg.pc;
   target_addr = target_op + id_stage_reg.imm;
   
   pc_imm <= (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op) ? (target_addr & 32'hfffffffe) : (target_addr);
@@ -118,13 +130,13 @@ end
 
 always_ff @(posedge clk) begin
   if (ex_reg_we) begin
-    o_pc_mux <= (id_stage_reg.ex_ctrl.branch & br_en) ? (pc_offset) : (pc_next);
+    o_pc_mux <= branch_taken ? pc_offset : pc_next;
     o_pc_imm <= (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op) ? (target_addr & 32'hfffffffe) : (target_addr);
   end
 end
 
 // Branch Flush Logic
-assign o_flush = id_stage_reg.ex_ctrl.branch & br_en;
+assign o_flush = branch_taken;
 
 // Latch to Pipeline Registers
 always_ff @(posedge clk) begin
@@ -140,7 +152,7 @@ always_ff @(posedge clk) begin
   end else if (ex_reg_we) begin
     // Latch Data Signals
     ex_stage_reg.alu_out   <= alu_out;
-    ex_stage_reg.rs2_rdata <= forward_b_op;
+    ex_stage_reg.rs2_rdata <= fwd_src_b_data;
     ex_stage_reg.rd_addr   <= id_stage_reg.rd_addr;
 
     // Latch Control Signals
@@ -153,11 +165,11 @@ always_ff @(posedge clk) begin
     ex_stage_reg.rvfi.inst      <= id_stage_reg.rvfi.inst;
     ex_stage_reg.rvfi.rs1_addr  <= id_stage_reg.rvfi.rs1_addr;
     ex_stage_reg.rvfi.rs2_addr  <= id_stage_reg.rvfi.rs2_addr;
-    ex_stage_reg.rvfi.rs1_rdata <= forward_a_op;
-    ex_stage_reg.rvfi.rs2_rdata <= forward_b_op;
+    ex_stage_reg.rvfi.rs1_rdata <= fwd_src_a_data;
+    ex_stage_reg.rvfi.rs2_rdata <= fwd_src_b_data;
     ex_stage_reg.rvfi.rd_addr   <= id_stage_reg.rvfi.rd_addr;
     ex_stage_reg.rvfi.pc_rdata  <= id_stage_reg.rvfi.pc_rdata;
-    ex_stage_reg.rvfi.pc_wdata  <= (id_stage_reg.ex_ctrl.branch & br_en) ? pc_imm : id_stage_reg.rvfi.pc_wdata;
+    ex_stage_reg.rvfi.pc_wdata  <= branch_taken ? pc_imm : id_stage_reg.rvfi.pc_wdata;
   end
 end
 

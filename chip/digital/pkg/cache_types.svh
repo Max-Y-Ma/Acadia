@@ -8,10 +8,11 @@ package cache_types;
   } controller_state_t;
 
   typedef enum logic [2:0] {
-      LINE_IDLE,
-      WAIT,
-      SERIALIZE,
-      DESERIALIZE,
-      DESERIALIZE_DONE
+    LINE_IDLE,
+    WAIT,
+    SERIALIZE,
+    DESERIALIZE,
+    DESERIALIZE_DONE
   } cacheline_state_t;
-endpackage;
+
+endpackage : cache_types
