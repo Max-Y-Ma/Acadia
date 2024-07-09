@@ -136,11 +136,6 @@ typedef enum bit {
   alu_out       = 1'b1
 } wb_mux_t;
 
-typedef enum bit {
-  control_out = 1'b0,
-  stall_out   = 1'b1
-} ctrl_mux_t;
-
 /******************************************************************************\
   Pipeline stage typedefs
 \******************************************************************************/

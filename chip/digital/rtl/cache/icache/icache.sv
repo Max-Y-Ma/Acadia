@@ -83,7 +83,7 @@ import cache_types::*;
     end
 
     always_comb begin
-      // DRAM signalsf
+      // DRAM signals
       dfp_wdata = 'x;
       for (int i = 0; i < WAYS; i++) begin
         if (evict_candidate[i]) begin
@@ -180,6 +180,6 @@ import cache_types::*;
     end endgenerate
 
     icache_control #(.WAYS(WAYS)) cache_control0(.*);
-    plru    #(.WAYS(WAYS)) plru0(.*);
+    plru           #(.WAYS(WAYS)) plru0(.*);
 
 endmodule

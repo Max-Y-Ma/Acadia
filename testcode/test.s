@@ -16,28 +16,22 @@ _start:
     nop
     nop
     nop
-    beq  x1, x2, label
     nop
     nop
     nop
     nop
     nop
-  label:
     nop
     nop
     nop
     nop
     nop
-    beq  x1, x2, label2
     nop
     nop
     nop
     nop
     nop
-  label2:
     auipc x3, 0 
-    sw    x3, 0(x3)
-    lw    x5, 0(x3)
 
     # Add your own test cases here!
 

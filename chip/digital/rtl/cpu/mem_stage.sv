@@ -6,7 +6,7 @@ import rv32imc_types::*;
   input logic clk, rst,
 
   // Stall Signals
-  input  logic mem_reg_we,
+  input  logic mem_stall,
 
   // Data Memory Ports
   output logic [31:0] dmem_addr,
@@ -18,19 +18,6 @@ import rv32imc_types::*;
   input  ex_stage_t  ex_stage_reg,
   output mem_stage_t mem_stage_reg
 );
-
-// We only want to read/write from data memory once, despite stall cycles
-logic dmem_mask_en;
-always_ff @(posedge clk) begin
-  // We are allowed to read/write after a reset or non-stall cycle
-  if (rst || mem_reg_we) begin
-    dmem_mask_en <= 1'b1;
-  end 
-  // We are not allowed to read after a stall cycles
-  else begin
-    dmem_mask_en <= 1'b0;
-  end
-end
 
 // Data Memory Logic
 logic [31:0] mem_addr;
@@ -45,11 +32,11 @@ always_comb begin
   if (ex_stage_reg.mem_ctrl.mem_read) begin
     dmem_addr = {mem_addr[31:2], 2'b00};
     unique case(ex_stage_reg.mem_ctrl.mem_funct3)
-      lb  : dmem_rmask = (dmem_mask_en) ? (4'h1 << mem_addr[1:0]) : '0;
-      lbu : dmem_rmask = (dmem_mask_en) ? (4'h1 << mem_addr[1:0]) : '0;
-      lh  : dmem_rmask = (dmem_mask_en) ? (4'h3 << mem_addr[1:0]) : '0;
-      lhu : dmem_rmask = (dmem_mask_en) ? (4'h3 << mem_addr[1:0]) : '0;
-      lw  : dmem_rmask = (dmem_mask_en) ? (4'hF)                  : '0;
+      lb  : dmem_rmask = (!mem_stall) ? (4'h1 << mem_addr[1:0]) : '0;
+      lbu : dmem_rmask = (!mem_stall) ? (4'h1 << mem_addr[1:0]) : '0;
+      lh  : dmem_rmask = (!mem_stall) ? (4'h3 << mem_addr[1:0]) : '0;
+      lhu : dmem_rmask = (!mem_stall) ? (4'h3 << mem_addr[1:0]) : '0;
+      lw  : dmem_rmask = (!mem_stall) ? (4'hF)                  : '0;
       default: dmem_rmask = 'x;
     endcase
   end
@@ -58,9 +45,9 @@ always_comb begin
   else if (ex_stage_reg.mem_ctrl.mem_write) begin
     dmem_addr = {mem_addr[31:2], 2'b00};
     unique case (ex_stage_reg.mem_ctrl.mem_funct3)
-      sb : dmem_wmask = (dmem_mask_en) ? (4'h1 << mem_addr[1:0]) : '0;
-      sh : dmem_wmask = (dmem_mask_en) ? (4'h3 << mem_addr[1:0]) : '0;
-      sw : dmem_wmask = (dmem_mask_en) ? (4'hF)                  : '0;
+      sb : dmem_wmask = (!mem_stall) ? (4'h1 << mem_addr[1:0]) : '0;
+      sh : dmem_wmask = (!mem_stall) ? (4'h3 << mem_addr[1:0]) : '0;
+      sw : dmem_wmask = (!mem_stall) ? (4'hF)                  : '0;
       default: dmem_wmask = 'x;
     endcase
     unique case (ex_stage_reg.mem_ctrl.mem_funct3)
@@ -78,7 +65,7 @@ always_ff @(posedge clk) begin
   if (rst) begin
     rvfi_mem_rmask <= '0;
     rvfi_mem_wmask <= '0;
-  end else if (dmem_mask_en) begin
+  end else if (mem_stall) begin
     rvfi_mem_rmask <= dmem_rmask;
     rvfi_mem_wmask <= dmem_wmask;
   end
@@ -93,7 +80,7 @@ always_ff @(posedge clk) begin
     mem_stage_reg.alu_out    <= '0;
     mem_stage_reg.wb_ctrl    <= '0;
     mem_stage_reg.rvfi       <= '0;
-  end else if (mem_reg_we) begin
+  end else if (!mem_stall) begin
     // Latch Data Signals
     mem_stage_reg.rd_addr <= ex_stage_reg.rd_addr;
     mem_stage_reg.alu_out <= ex_stage_reg.alu_out;
@@ -113,8 +100,8 @@ always_ff @(posedge clk) begin
     mem_stage_reg.rvfi.pc_rdata  <= ex_stage_reg.rvfi.pc_rdata;
     mem_stage_reg.rvfi.pc_wdata  <= ex_stage_reg.rvfi.pc_wdata;
     mem_stage_reg.rvfi.mem_addr  <= dmem_addr;
-    mem_stage_reg.rvfi.mem_rmask <= (dmem_mask_en) ? dmem_rmask : rvfi_mem_rmask;
-    mem_stage_reg.rvfi.mem_wmask <= (dmem_mask_en) ? dmem_wmask : rvfi_mem_wmask;
+    mem_stage_reg.rvfi.mem_rmask <= (!mem_stall) ? dmem_rmask : rvfi_mem_rmask;
+    mem_stage_reg.rvfi.mem_wmask <= (!mem_stall) ? dmem_wmask : rvfi_mem_wmask;
     mem_stage_reg.rvfi.mem_wdata <= dmem_wdata;
   end
 end

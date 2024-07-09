@@ -31,69 +31,73 @@ logic pc_we;
 // Flush Signals
 logic flush;
 
-// Indicates that instruction memory has finished reading
-// This signal stays high until the stall cycles complete
-logic imem_ready;   
+// Indicates that the processor should stall for instruction memory 
+// in the current cycle. This current cycle, the processor does nothing.
+logic imem_stall;   
 
-// Indicates that data memory has finished reading or writing
-// This signal stays high until the stall cycles complete
-logic dmem_ready;
+// Indicates that the processor should stall for data memory
+// in the current cycle. This current cycle, the processor does nothing.
+logic dmem_stall;
+
+// Indicates a load hazards that must be resolved by stalling fetch and decode
+logic load_hazard;
 
 // Combinational write enable signals
-logic if_reg_we; 
-logic id_reg_we; 
-logic ex_reg_we; 
-logic mem_reg_we;
-logic wb_reg_we; 
-assign if_reg_we  = i_id_reg_we & pc_we & !flush & imem_ready & dmem_ready;
-assign id_reg_we  = imem_ready & dmem_ready;
-assign ex_reg_we  = imem_ready & dmem_ready;
-assign mem_reg_we = imem_ready & dmem_ready;
-assign wb_reg_we  = imem_ready & dmem_ready;
+logic if_stall; 
+logic id_stall; 
+logic ex_stall; 
+logic mem_stall;
+logic wb_stall; 
+assign if_stall  = imem_stall | dmem_stall | load_hazard;
+assign id_stall  = imem_stall | dmem_stall | load_hazard;
+assign ex_stall  = imem_stall | dmem_stall;
+assign mem_stall = imem_stall | dmem_stall;
+assign wb_stall  = imem_stall | dmem_stall;
 
 pc_mux_t     pc_mux;
-logic [31:0] pc_imm;
+logic [31:0] pc_offset;
 if_stage if_stage (
   .clk          (clk),
   .rst          (rst),
   .i_pc_mux     (pc_mux),
-  .i_pc_imm     (pc_imm),
-  .if_reg_we    (if_reg_we),
+  .i_pc_offset  (pc_offset),
+  .i_flush      (flush),
+  .if_stall     (if_stall),
   .imem_resp    (imem_resp),
   .imem_addr    (imem_addr),
   .imem_rmask   (imem_rmask),
   .if_stage_reg (if_stage_reg)
 );
 
-logic        i_regf_we;
-logic [4:0]  i_rd_addr;
-logic [31:0] i_write_data;
+logic        wb_regf_we;
+logic [4:0]  wb_rd_addr;
+logic [31:0] wb_write_data;
 id_stage id_stage (
   .clk           (clk),
   .rst           (rst),
-  .i_regf_we     (i_regf_we),
-  .i_rd_addr     (i_rd_addr),
-  .i_rd_wdata    (i_write_data),
+  .i_regf_we     (wb_regf_we),
+  .i_rd_addr     (wb_rd_addr),
+  .i_rd_wdata    (wb_write_data),
   .i_flush       (flush),
-  .id_reg_we     (id_reg_we),
-  .imem_ready    (imem_ready),
-  .o_id_reg_we   (i_id_reg_we),
-  .o_pc_we       (pc_we),
+  .id_stall      (id_stall),
+  .imem_stall    (imem_stall),
+  .load_hazard   (load_hazard),
   .imem_rmask    (imem_rmask),
   .imem_rdata    (imem_rdata),
   .imem_resp     (imem_resp),
   .if_stage_reg  (if_stage_reg),
-  .id_stage_reg  (id_stage_reg)
+  .id_stage_reg  (id_stage_reg),
+  .ex_stage_reg  (ex_stage_reg)
 );
 
 ex_stage ex_stage (
   .clk           (clk),
   .rst           (rst),
   .o_pc_mux      (pc_mux),
-  .o_pc_imm      (pc_imm),
-  .ex_reg_we     (ex_reg_we),
+  .o_pc_offset   (pc_offset),
+  .ex_stall      (ex_stall),
   .o_flush       (flush),
-  .i_wb_data     (i_write_data),
+  .i_wb_data     (wb_write_data),
   .id_stage_reg  (id_stage_reg),
   .mem_stage_reg (mem_stage_reg),
   .ex_stage_reg  (ex_stage_reg)
@@ -102,7 +106,7 @@ ex_stage ex_stage (
 mem_stage mem_stage (
   .clk           (clk),
   .rst           (rst),
-  .mem_reg_we    (mem_reg_we),
+  .mem_stall     (mem_stall),
   .dmem_addr     (dmem_addr),
   .dmem_rmask    (dmem_rmask),
   .dmem_wmask    (dmem_wmask),
@@ -114,11 +118,11 @@ mem_stage mem_stage (
 wb_stage wb_stage (
   .clk           (clk),
   .rst           (rst),
-  .o_regf_we     (i_regf_we),
-  .o_rd_addr     (i_rd_addr),
-  .o_write_data  (i_write_data),
-  .wb_reg_we     (wb_reg_we),
-  .dmem_ready    (dmem_ready),
+  .o_regf_we     (wb_regf_we),
+  .o_rd_addr     (wb_rd_addr),
+  .o_write_data  (wb_write_data),
+  .wb_stall      (wb_stall),
+  .dmem_stall    (dmem_stall),
   .dmem_rdata    (dmem_rdata),
   .dmem_rmask    (dmem_rmask),
   .dmem_wmask    (dmem_wmask),

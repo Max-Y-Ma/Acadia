@@ -11,8 +11,8 @@ import rv32imc_types::*;
   output logic [31:0] o_write_data,
 
   // Stall Signals
-  input  logic wb_reg_we,
-  output logic dmem_ready,
+  input  logic wb_stall,
+  output logic dmem_stall,
 
   // Data Memory Ports
   input  logic [31:0] dmem_rdata,
@@ -25,35 +25,29 @@ import rv32imc_types::*;
   output wb_stage_t wb_stage_reg
 );
 
-// Signal indicating if data memory is ready
-logic dmem_valid;
-logic dmem_ready_probe;
+logic mem_read, mem_write;
+assign mem_read = mem_stage_reg.mem_ctrl.mem_read;
+assign mem_write = mem_stage_reg.mem_ctrl.mem_write;
+
+// Signal indicating if data memory is currently servicing a request
+logic dmem_busy;
 always_ff @(posedge clk) begin
-  if (rst || wb_reg_we) begin
-    dmem_ready_probe <= '0;
-  end else if (dmem_resp) begin
-    // Probe should stay high if other stalls occur
-    dmem_ready_probe <= !wb_reg_we;
+  if (rst) begin
+    dmem_busy <= 1'b0;
+  end 
+  // We are busy if there is a current read from or write to data memory
+  else if (mem_read || mem_write) begin
+    dmem_busy <= 1'b1;
+  end
+  // We are not busy if there is a data memory response without a read or 
+  // write to data memory in the current cycle
+  else if (dmem_resp) begin
+    dmem_busy <= 1'b0;
   end
 end
 
-// Data memory is ready during a response or probe signal is high
-assign dmem_valid = dmem_resp ? 1'b1 : dmem_ready_probe;
-
-// Signal indicating we are not reading from data memory
-logic ready_valid;
-logic ready_valid_probe;
-always_ff @(posedge clk) begin
-  if (rst || dmem_valid) begin
-    ready_valid_probe <= 1'b1;
-  end else if (|dmem_rmask || |dmem_wmask) begin
-    ready_valid_probe <= '0;
-  end
-end
-assign ready_valid = (|dmem_rmask || |dmem_wmask) ? 1'b0 : ready_valid_probe;
-
-// Data memory is ready during a response or probe signal is high
-assign dmem_ready = dmem_valid | ready_valid;
+// Signal indicating to stall waiting for data memory response
+assign dmem_stall = dmem_busy & !dmem_resp;
 
 // Data Memory Logic
 logic [31:0] mem_addr;
@@ -70,7 +64,7 @@ end
 
 logic [31:0] mem_rdata_sync;
 always_ff @(posedge clk) begin
-  if (wb_reg_we) begin
+  if (!wb_stall) begin
     mem_rdata_sync <= dmem_resp ? dmem_rdata : mem_rdata_dff;
   end
 end
@@ -80,9 +74,9 @@ always_comb begin
   // SEXT Logic
   unique case (mem_stage_reg.wb_ctrl.mem_funct3)
     lb : mem_rdata = {{24{mem_rdata_sync[7 +8 *mem_addr[1:0]]}}, mem_rdata_sync[8 *mem_addr[1:0] +: 8 ]};
-    lbu: mem_rdata = {{24{1'b0}}                           , mem_rdata_sync[8 *mem_addr[1:0] +: 8 ]};
+    lbu: mem_rdata = {{24{1'b0}}                               , mem_rdata_sync[8 *mem_addr[1:0] +: 8 ]};
     lh : mem_rdata = {{16{mem_rdata_sync[15+16*mem_addr[1]  ]}}, mem_rdata_sync[16*mem_addr[1]   +: 16]};
-    lhu: mem_rdata = {{16{1'b0}}                           , mem_rdata_sync[16*mem_addr[1]   +: 16]};
+    lhu: mem_rdata = {{16{1'b0}}                               , mem_rdata_sync[16*mem_addr[1]   +: 16]};
     lw : mem_rdata = mem_rdata_sync;
     default: mem_rdata = 'x;
   endcase
@@ -98,7 +92,7 @@ always_ff @(posedge clk) begin
   if (rst) begin
     // Reset Pipeline Registers
     wb_stage_reg.rvfi <= '0;
-  end else if (wb_reg_we) begin
+  end else if (!wb_stall) begin
     // Latch Data Signals
     wb_stage_reg.rvfi.valid     <= mem_stage_reg.rvfi.valid;
     wb_stage_reg.rvfi.order     <= mem_stage_reg.rvfi.order;

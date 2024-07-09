@@ -3,25 +3,25 @@ module ex_stage
 import rv32imc_types::*;
 (
   // Synchronous Signals
-  input  logic clk, rst,
+  input logic clk, rst,
 
   // Datapath Signals
   output pc_mux_t     o_pc_mux,
-  output logic [31:0] o_pc_imm,
+  output logic [31:0] o_pc_offset,
 
   // Stall Signals
-  input  logic ex_reg_we,
+  input logic ex_stall,
 
   // Flush Signals
   output logic o_flush,
 
   // Writeback Signal
-  input  logic [31:0] i_wb_data,
+  input logic [31:0] i_wb_data,
 
   // Pipeline Stage Registers
-  input  id_stage_t id_stage_reg,
+  input  id_stage_t  id_stage_reg,
   input  mem_stage_t mem_stage_reg,
-  output ex_stage_t ex_stage_reg
+  output ex_stage_t  ex_stage_reg
 );
 
 // Forwarding Unit
@@ -120,19 +120,24 @@ end
 logic  branch_taken;
 assign branch_taken = id_stage_reg.ex_ctrl.branch & br_en;
 
-logic [31:0] target_op, target_addr, pc_imm;
+logic [31:0] base_addr, target_addr, pc_imm;
 always_comb begin
-  target_op = (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op) ? fwd_src_a_data : id_stage_reg.pc;
-  target_addr = target_op + id_stage_reg.imm;
-  
-  pc_imm <= (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op) ? (target_addr & 32'hfffffffe) : (target_addr);
-end
+  // Determine base address value for branches or jumps
+  if (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op)
+    base_addr = fwd_src_a_data;
+  else 
+    base_addr = id_stage_reg.pc;
 
-always_ff @(posedge clk) begin
-  if (ex_reg_we) begin
-    o_pc_mux <= branch_taken ? pc_offset : pc_next;
-    o_pc_imm <= (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op) ? (target_addr & 32'hfffffffe) : (target_addr);
-  end
+  // Add the immediate offset to the base address to form the target address
+  target_addr = base_addr + id_stage_reg.imm;
+  
+  // Assert the next program counter value in fetch stage
+  o_pc_mux    = branch_taken ? pc_offset : pc_next;
+  
+  if (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op)
+    o_pc_offset = target_addr & 32'hfffffffe;
+  else 
+    o_pc_offset = target_addr;
 end
 
 // Branch Flush Logic
@@ -149,7 +154,7 @@ always_ff @(posedge clk) begin
     ex_stage_reg.mem_ctrl  <= '0;
     ex_stage_reg.wb_ctrl   <= '0;
     ex_stage_reg.rvfi      <= '0;
-  end else if (ex_reg_we) begin
+  end else if (!ex_stall) begin
     // Latch Data Signals
     ex_stage_reg.alu_out   <= alu_out;
     ex_stage_reg.rs2_rdata <= fwd_src_b_data;
@@ -169,7 +174,7 @@ always_ff @(posedge clk) begin
     ex_stage_reg.rvfi.rs2_rdata <= fwd_src_b_data;
     ex_stage_reg.rvfi.rd_addr   <= id_stage_reg.rvfi.rd_addr;
     ex_stage_reg.rvfi.pc_rdata  <= id_stage_reg.rvfi.pc_rdata;
-    ex_stage_reg.rvfi.pc_wdata  <= branch_taken ? pc_imm : id_stage_reg.rvfi.pc_wdata;
+    ex_stage_reg.rvfi.pc_wdata  <= branch_taken ? pc_offset : id_stage_reg.rvfi.pc_wdata;
   end
 end
 

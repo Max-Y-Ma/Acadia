@@ -216,6 +216,6 @@ import cache_types::*;
     end endgenerate
 
     dcache_control #(.WAYS(WAYS)) cache_control0(.*);
-    plru    #(.WAYS(WAYS)) plru0(.*);
+    plru           #(.WAYS(WAYS)) plru0(.*);
 
 endmodule
