@@ -65,12 +65,12 @@ always_ff @(posedge clk) begin
   end else if (!if_stall) begin
     // Latch Program Counters
     if_stage_reg.pc      <= pc;
-    if_stage_reg.pc_next <= pc_next;
+    if_stage_reg.pc_next <= i_flush ? (pc_next + 'd4) : pc_next;
 
     // Latch RVFI Signals
     if_stage_reg.rvfi.valid    <= 1'b1;
     if_stage_reg.rvfi.pc_rdata <= pc;
-    if_stage_reg.rvfi.pc_wdata <= pc_next;
+    if_stage_reg.rvfi.pc_wdata <= i_flush ? (pc_next + 'd4) : pc_next;
   end
 end
 

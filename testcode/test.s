@@ -136,58 +136,58 @@ tmp0:
     ori 	x3, x3, 2
     ori 	x3, x3, 4
 
-    # auipc   x5, 0
-    # addi    x5, x5, 16
-    # jalr    x6, 0(x5)
-    # addi   	x5, x5, 2
-    # addi   	x5, x5, 4   # Should Branch Here
+    auipc   x5, 0
+    addi    x5, x5, 16
+    jalr    x6, 0(x5)
+    addi   	x5, x5, 2
+    addi   	x5, x5, 4   # Should Branch Here
 
-#     # Testing conditional branches
-#     lui     x7, 0x70000
-#     addi 	  x2, x0, 0x2
-#     sw      x2, 0(x7)
-#     addi    x3, x0, 0x4
-#     addi    x4, x0, 0x4
-#     # Test conditionals branches not taken
-#     beq     x2, x3, tmp1
-#     ori     x5, x5, 2 
-# tmp1:	
-#     bne     x3, x4, tmp2     
-#     ori     x5, x5, 2 
-# tmp2:	
-#     blt     x3, x4, tmp3 
-#     ori     x5, x5, 4 
-# tmp3:	
-#     bge     x2, x4, tmp4 
-#     ori     x5, x5, 8 
-# tmp4:	
-#     bltu 	  x3, x4, tmp5 
-#     lw      x2, 0(x7)
-# tmp5:	
-#     bgeu   	x2, x4, tmp6         
-#     ori     x5, x5, 0x20 
-# tmp6:
-#     # Test conditionals branches that are taken
-#     addi   	x2, x0, 0x2
-#     addi    x3, x0, 0x4
-#     addi    x4, x0, 0x4
-#     beq	    x3, x4, tmp11 
-#     ori     x5, x5, 0x01 
-# tmp11:	
-#     bne	    x2, x3, tmp12 
-#     ori     x5, x5, 0x02 
-# tmp12:	
-#     blt	    x2, x3, tmp13 
-#     ori     x5, x5, 0x04 
-# tmp13:	
-#     bge	    x3, x4, tmp14 
-#     ori     x5, x5, 0x08 
-# tmp14:  
-#     bltu	  x2, x3, tmp15 
-#     ori     x5, x5, 0x10  
-# tmp15:  
-#     bgeu	  x3, x4, tmp16 
-#     ori     x5, x5, 0x20  
-# tmp16:
+    # Testing conditional branches
+    lui     x7, 0x70000
+    addi 	  x2, x0, 0x2
+    sw      x2, 0(x7)
+    addi    x3, x0, 0x4
+    addi    x4, x0, 0x4
+    # Test conditionals branches not taken
+    beq     x2, x3, tmp1
+    ori     x5, x5, 2 
+tmp1:	
+    bne     x3, x4, tmp2     
+    ori     x5, x5, 2 
+tmp2:	
+    blt     x3, x4, tmp3 
+    ori     x5, x5, 4 
+tmp3:	
+    bge     x2, x4, tmp4 
+    ori     x5, x5, 8 
+tmp4:	
+    bltu 	  x3, x4, tmp5 
+    lw      x2, 0(x7)
+tmp5:	
+    bgeu   	x2, x4, tmp6         
+    ori     x5, x5, 0x20 
+tmp6:
+    # Test conditionals branches that are taken
+    addi   	x2, x0, 0x2
+    addi    x3, x0, 0x4
+    addi    x4, x0, 0x4
+    beq	    x3, x4, tmp11 
+    ori     x5, x5, 0x01 
+tmp11:	
+    bne	    x2, x3, tmp12 
+    ori     x5, x5, 0x02 
+tmp12:	
+    blt	    x2, x3, tmp13 
+    ori     x5, x5, 0x04 
+tmp13:	
+    bge	    x3, x4, tmp14 
+    ori     x5, x5, 0x08 
+tmp14:  
+    bltu	  x2, x3, tmp15 
+    ori     x5, x5, 0x10  
+tmp15:  
+    bgeu	  x3, x4, tmp16 
+    ori     x5, x5, 0x20  
+tmp16:
     
     slti x0, x0, -256 # this is the magic instruction to end the simulation
