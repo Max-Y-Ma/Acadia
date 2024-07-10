@@ -14,6 +14,7 @@ import rv32imc_types::*;
 
   // Stall Signals
   input  logic if_stall,
+  input  logic id_stall, 
 
   // Instruction Memory Ports
   input  logic        imem_resp,
@@ -28,24 +29,35 @@ import rv32imc_types::*;
 logic [31:0] pc;
 logic [31:0] pc_next;
 always_ff @(posedge clk) begin
-  if (rst)
+  // Set program counter to reset vector upon a reset
+  if (rst) begin
     pc <= 32'h60000000;
-  else if (!if_stall)
+  end
+  // During a flush cycle, the target address will be read from memory. So the
+  // program counter should be set to the next instruction from the target
+  // address
+  else if (i_flush && !if_stall) begin
+    pc <= pc_next + 'd4;
+  end
+  // Otherwise, we can set program counter to next state
+  else if (!if_stall) begin
     pc <= pc_next;
+  end
 end
 
 // Program Counter Logic
 assign pc_next = (i_pc_mux == pc_offset) ? (i_pc_offset) : (pc + 'd4);
 
-// Instruction Memory Logic
-assign imem_addr = pc;
+// Assign instruction memory address to the branch target address during a 
+// flush cycle in which a branch was taken, otherwise just the current pc.
+assign imem_addr = i_flush ? pc_next : pc;
 
-// Assert read mask on read enable cycle
+// Assert read mask unless we are stalled
 assign imem_rmask = (!if_stall) ? 4'hF : 4'b0;
 
 // Latch to Pipeline Registers
 always_ff @(posedge clk) begin
-  if (rst || i_flush) begin
+  if (rst || (i_flush & !id_stall)) begin
     // Reset Pipeline Registers
     if_stage_reg.pc      <= '0;
     if_stage_reg.pc_next <= '0;

@@ -78,6 +78,7 @@ always_ff @(posedge clk) begin
     mem_stage_reg.pc_next    <= '0;
     mem_stage_reg.rd_addr    <= '0;
     mem_stage_reg.alu_out    <= '0;
+    mem_stage_reg.mem_ctrl   <= '0;
     mem_stage_reg.wb_ctrl    <= '0;
     mem_stage_reg.rvfi       <= '0;
   end else if (!mem_stall) begin
@@ -86,7 +87,8 @@ always_ff @(posedge clk) begin
     mem_stage_reg.alu_out <= ex_stage_reg.alu_out;
     
     // Latch Control Signals
-    mem_stage_reg.wb_ctrl <= ex_stage_reg.wb_ctrl;
+    mem_stage_reg.mem_ctrl <= ex_stage_reg.mem_ctrl;
+    mem_stage_reg.wb_ctrl  <= ex_stage_reg.wb_ctrl;
 
     // Latch RVFI Signals
     mem_stage_reg.rvfi.valid     <= ex_stage_reg.rvfi.valid;

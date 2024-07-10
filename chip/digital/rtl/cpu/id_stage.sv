@@ -15,6 +15,7 @@ import rv32imc_types::*;
 
   // Stall Signals
   input  logic id_stall,
+  input  logic ex_stall,
   output logic imem_stall,
   output logic load_hazard,
 
@@ -25,8 +26,7 @@ import rv32imc_types::*;
 
   // Pipeline Stage Registers
   input  if_stage_t if_stage_reg,
-  output id_stage_t id_stage_reg,
-  input  ex_stage_t ex_stage_reg
+  output id_stage_t id_stage_reg
 );
 
 // Signal indicating if instruction memory is currently servicing a request
@@ -50,7 +50,8 @@ assign imem_stall = imem_busy & !imem_resp;
 // Instruction Stall Logic
 logic [31:0] inst, inst_buffer;
 always_ff @(posedge clk) begin
-  if (rst) begin
+  // If we get flushed, reset the instruction buffer
+  if (rst || i_flush) begin
     inst_buffer <= '0;
   end 
   // If we are stalled, buffer the newest instruction data from memory
@@ -69,9 +70,10 @@ always_comb begin
   else if (id_stall) begin
     inst = imem_resp ? imem_rdata : inst_buffer;
   end 
-  // Otherwise, the current instruction must be from memory
+  // Otherwise, the current instruction could be from memory directory or
+  // it could have been latched from a load hazard
   else begin
-    inst = imem_rdata;
+    inst = imem_resp ? imem_rdata : inst_buffer;
   end
 end
 
@@ -110,8 +112,8 @@ regfile #(
 
 // Hazard Detection Unit
 detection_unit detection_unit (
-  .ex_mem_read(ex_stage_reg.mem_ctrl.mem_read),
-  .ex_rd_addr(ex_stage_reg.rd_addr),
+  .ex_mem_read(id_stage_reg.mem_ctrl.mem_read), // Current execute stage signal
+  .ex_rd_addr(id_stage_reg.rd_addr),            // Current execute stage signal
   .rs1_addr(rs1_addr),
   .rs2_addr(rs2_addr),
   .load_hazard(load_hazard)
@@ -134,8 +136,8 @@ end
 
 // Latch to Pipeline Registers
 always_ff @(posedge clk) begin
-  // Flush stage during reset, stall cycle, or either flush cycle
-  if (rst || i_flush) begin
+  // During a load hazard, pass a bubble on the next available cycle
+  if (rst || ((load_hazard || i_flush) & !ex_stall)) begin
     id_stage_reg.pc         <= '0;
     id_stage_reg.pc_next    <= '0;
     id_stage_reg.rs1_addr   <= '0;

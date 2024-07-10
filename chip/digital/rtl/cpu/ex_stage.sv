@@ -132,7 +132,7 @@ always_comb begin
   target_addr = base_addr + id_stage_reg.imm;
   
   // Assert the next program counter value in fetch stage
-  o_pc_mux    = branch_taken ? pc_offset : pc_next;
+  o_pc_mux = branch_taken ? pc_offset : pc_next;
   
   if (id_stage_reg.ex_ctrl.target_addr_mux == rs1_op)
     o_pc_offset = target_addr & 32'hfffffffe;
@@ -174,7 +174,7 @@ always_ff @(posedge clk) begin
     ex_stage_reg.rvfi.rs2_rdata <= fwd_src_b_data;
     ex_stage_reg.rvfi.rd_addr   <= id_stage_reg.rvfi.rd_addr;
     ex_stage_reg.rvfi.pc_rdata  <= id_stage_reg.rvfi.pc_rdata;
-    ex_stage_reg.rvfi.pc_wdata  <= branch_taken ? pc_offset : id_stage_reg.rvfi.pc_wdata;
+    ex_stage_reg.rvfi.pc_wdata  <= branch_taken ? o_pc_offset : id_stage_reg.rvfi.pc_wdata;
   end
 end
 

@@ -63,6 +63,7 @@ if_stage if_stage (
   .i_pc_offset  (pc_offset),
   .i_flush      (flush),
   .if_stall     (if_stall),
+  .id_stall     (id_stall),
   .imem_resp    (imem_resp),
   .imem_addr    (imem_addr),
   .imem_rmask   (imem_rmask),
@@ -80,14 +81,14 @@ id_stage id_stage (
   .i_rd_wdata    (wb_write_data),
   .i_flush       (flush),
   .id_stall      (id_stall),
+  .ex_stall      (ex_stall),
   .imem_stall    (imem_stall),
   .load_hazard   (load_hazard),
   .imem_rmask    (imem_rmask),
   .imem_rdata    (imem_rdata),
   .imem_resp     (imem_resp),
   .if_stage_reg  (if_stage_reg),
-  .id_stage_reg  (id_stage_reg),
-  .ex_stage_reg  (ex_stage_reg)
+  .id_stage_reg  (id_stage_reg)
 );
 
 ex_stage ex_stage (
