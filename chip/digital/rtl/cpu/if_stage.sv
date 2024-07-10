@@ -57,7 +57,7 @@ assign imem_rmask = (!if_stall) ? 4'hF : 4'b0;
 
 // Latch to Pipeline Registers
 always_ff @(posedge clk) begin
-  if (rst || (i_flush & !id_stall)) begin
+  if (rst) begin
     // Reset Pipeline Registers
     if_stage_reg.pc      <= '0;
     if_stage_reg.pc_next <= '0;
