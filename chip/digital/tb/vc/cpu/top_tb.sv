@@ -38,6 +38,7 @@ monitor monitor(.itf(mon_itf));
   end
 `else
   // Memory Types for Directed Test
+  // magic_dual_port mem(.itf_i(mem_itf_i), .itf_d(mem_itf_d));
   ordinary_dual_port mem(.itf_i(mem_itf_i), .itf_d(mem_itf_d));
 `endif
 

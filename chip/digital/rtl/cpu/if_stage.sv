@@ -14,10 +14,8 @@ import rv32imc_types::*;
 
   // Stall Signals
   input  logic if_stall,
-  input  logic id_stall, 
 
   // Instruction Memory Ports
-  input  logic        imem_resp,
   output logic [31:0] imem_addr,
   output logic [3:0]  imem_rmask,
 
@@ -64,13 +62,13 @@ always_ff @(posedge clk) begin
     if_stage_reg.rvfi    <= '0;
   end else if (!if_stall) begin
     // Latch Program Counters
-    if_stage_reg.pc      <= pc;
-    if_stage_reg.pc_next <= i_flush ? (pc_next + 'd4) : pc_next;
+    if_stage_reg.pc      <= imem_addr;
+    if_stage_reg.pc_next <= imem_addr + 'd4;
 
     // Latch RVFI Signals
     if_stage_reg.rvfi.valid    <= 1'b1;
-    if_stage_reg.rvfi.pc_rdata <= pc;
-    if_stage_reg.rvfi.pc_wdata <= i_flush ? (pc_next + 'd4) : pc_next;
+    if_stage_reg.rvfi.pc_rdata <= imem_addr;
+    if_stage_reg.rvfi.pc_wdata <= imem_addr + 'd4;
   end
 end
 

@@ -49,7 +49,7 @@ logic ex_stall;
 logic mem_stall;
 logic wb_stall; 
 assign if_stall  = imem_stall | dmem_stall | load_hazard;
-assign id_stall  = imem_stall | dmem_stall | load_hazard;
+assign id_stall  = imem_stall | dmem_stall;
 assign ex_stall  = imem_stall | dmem_stall;
 assign mem_stall = imem_stall | dmem_stall;
 assign wb_stall  = imem_stall | dmem_stall;
@@ -63,8 +63,6 @@ if_stage if_stage (
   .i_pc_offset  (pc_offset),
   .i_flush      (flush),
   .if_stall     (if_stall),
-  .id_stall     (id_stall),
-  .imem_resp    (imem_resp),
   .imem_addr    (imem_addr),
   .imem_rmask   (imem_rmask),
   .if_stage_reg (if_stage_reg)

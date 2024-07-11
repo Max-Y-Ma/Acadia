@@ -34,7 +34,7 @@ logic imem_busy;
 always_ff @(posedge clk) begin
   // We are not busy if there is a instruction memory response but we are
   // still stalled because of other conditions
-  if (rst || (imem_resp & id_stall)) begin
+  if (rst || (imem_resp & (id_stall || load_hazard))) begin
     imem_busy <= 1'b0;
   end 
   // We are busy if there is a current read from instruction memory or a 
@@ -51,11 +51,11 @@ assign imem_stall = imem_busy & !imem_resp;
 logic [31:0] inst, inst_buffer;
 always_ff @(posedge clk) begin
   // If we get flushed, reset the instruction buffer
-  if (rst || i_flush) begin
+  if (rst) begin
     inst_buffer <= '0;
   end 
   // If we are stalled, buffer the newest instruction data from memory
-  else if (id_stall && imem_resp) begin
+  else if ((id_stall || load_hazard) && imem_resp) begin
     inst_buffer <= imem_rdata;
   end
 end 
@@ -66,12 +66,8 @@ always_comb begin
   if (i_flush) begin
     inst = 'h13;
   end
-  // During a stall cycle, we should hold the current instruction
-  else if (id_stall) begin
-    inst = imem_resp ? imem_rdata : inst_buffer;
-  end 
   // Otherwise, the current instruction could be from memory directory or
-  // it could have been latched from a load hazard
+  // it could have been latched from a stall condition
   else begin
     inst = imem_resp ? imem_rdata : inst_buffer;
   end
@@ -126,7 +122,7 @@ always_ff @(posedge clk) begin
     order <= '0;
   end 
   // Order unchanged if a flush or stall cycle
-  else if (id_stall || i_flush) begin
+  else if (id_stall || load_hazard || i_flush) begin
     order <= order;
   end
   else if (if_stage_reg.rvfi.valid) begin
@@ -136,7 +132,7 @@ end
 
 // Latch to Pipeline Registers
 always_ff @(posedge clk) begin
-  // During a load hazard, pass a bubble on the next available cycle
+  // During a load hazard or flush, pass a bubble on the next available cycle
   if (rst || ((load_hazard || i_flush) & !ex_stall)) begin
     id_stage_reg.pc         <= '0;
     id_stage_reg.pc_next    <= '0;
