@@ -47,7 +47,8 @@ always_ff @(posedge clk) begin
 end
 
 // Signal indicating to stall waiting for data memory response
-assign dmem_stall = dmem_busy & !dmem_resp;
+assign dmem_stall = dmem_busy;  // For non-pipeline interface
+// assign dmem_stall = dmem_busy & !dmem_resp; // For pipeline interface
 
 // Data Memory Stall Logic
 logic [31:0] dmem_rdata_buffer;
