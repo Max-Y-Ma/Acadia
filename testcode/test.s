@@ -20,7 +20,7 @@ _start:
     slti    x3, x2, 0x123   # x3 <= (x2 < 0x123)
     sltiu   x4, x3, 0x123   # x4 <= (x3 < 0x123)
     xori    x5, x4, 0x123   # x5 <= x4 ^ 0x123
-    ori   	x6, x5, 0x123   # x6 <= x5 | 0x123
+    ori 	  x6, x5, 0x123   # x6 <= x5 | 0x123
     andi    x7, x6, 0x123   # x7 <= x6 & 0x123
     slli    x8, x7, 0xF     # x8 <= x7 << 0xF
     srli    x9, x8, 0xF     # x9 <= x8 >> 0xF
@@ -48,6 +48,28 @@ _start:
     and 	x29, x28, x27
     and 	x30, x29, x28
     and 	x31, x30, x29
+
+    mul	    x11, x10, x9
+    mul	    x12, x11, x10
+    mul	    x13, x12, x11
+    mulh	  x14, x13, x12
+    mulh    x15, x14, x13
+    mulh	  x16, x15, x14
+    mulhsu	x17, x16, x15
+    mulhsu	x18, x17, x16
+    mulhsu  x19, x18, x17
+    mulhu   x20, x19, x18
+    mulhu	  x21, x20, x19
+    mulhu	  x22, x21, x20
+    mul	    x23, x22, x21
+    add	    x24, x23, x22
+    mul	    x25, x24, x23
+    add	    x26, x25, x24
+    mul	    x27, x26, x25
+    add	    x28, x27, x26
+    mul	    x29, x28, x27
+    add	    x30, x29, x28
+    mul	    x31, x30, x29
     
     # Test load/store instructions
     # Load the RAM address into x7
@@ -129,9 +151,8 @@ _start:
     li	   x15, 22
 
     # Test branch/jump instructions
-    jal   x4, tmp0
+    jal     x4, tmp0
     ori 	x3, x3, 1
-
 tmp0:	
     ori 	x3, x3, 2
     ori 	x3, x3, 4
@@ -139,13 +160,12 @@ tmp0:
     auipc   x5, 0
     addi    x5, x5, 16
     jalr    x6, 0(x5)
-    addi   	x5, x5, 2
-    addi   	x5, x5, 4   # Should Branch Here
+    addi 	x5, x5, 2
+    addi 	x5, x5, 4   # Should Branch Here
 
     # Testing conditional branches
     lui     x7, 0x70000
     addi 	  x2, x0, 0x2
-    sw      x2, 0(x7)
     addi    x3, x0, 0x4
     addi    x4, x0, 0x4
     # Test conditionals branches not taken
@@ -161,32 +181,82 @@ tmp3:
     bge     x2, x4, tmp4 
     ori     x5, x5, 8 
 tmp4:	
-    bltu 	  x3, x4, tmp5 
-    lw      x2, 0(x7)
+    bltu 	x3, x4, tmp5 
+    ori     x5, x5, 0x20 
 tmp5:	
-    bgeu   	x2, x4, tmp6         
+    bgeu 	x2, x4, tmp6         
     ori     x5, x5, 0x20 
 tmp6:
     # Test conditionals branches that are taken
-    addi   	x2, x0, 0x2
+    addi 	x2, x0, 0x2
     addi    x3, x0, 0x4
     addi    x4, x0, 0x4
     beq	    x3, x4, tmp11 
     ori     x5, x5, 0x01 
-tmp11:	
-    bne	    x2, x3, tmp12 
+tmp11:
+    nop
+    nop
+    nop
+    nop
+    nop
+    bne	    x2, x3, tmp12
+    nop
+    nop
+    nop
+    nop
+    nop
     ori     x5, x5, 0x02 
-tmp12:	
-    blt	    x2, x3, tmp13 
+tmp12:
+    nop
+    nop
+    nop
+    nop
+    nop
+    blt	    x2, x3, tmp13
+    nop
+    nop
+    nop
+    nop
+    nop
     ori     x5, x5, 0x04 
-tmp13:	
+tmp13:
+    nop
+    nop
+    nop
+    nop
+    nop
     bge	    x3, x4, tmp14 
+    nop
+    nop
+    nop
+    nop
+    nop
     ori     x5, x5, 0x08 
-tmp14:  
-    bltu	  x2, x3, tmp15 
+tmp14:
+    nop
+    nop
+    nop
+    nop
+    nop
+    bltu	x2, x3, tmp15
+    nop
+    nop
+    nop
+    nop
+    nop
     ori     x5, x5, 0x10  
-tmp15:  
-    bgeu	  x3, x4, tmp16 
+tmp15:
+    nop
+    nop
+    nop
+    nop
+    nop
+    bgeu	x3, x4, tmp16 
+    nop
+    nop
+    nop
+    nop
+    nop
     ori     x5, x5, 0x20  
 tmp16:
     
