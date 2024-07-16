@@ -67,7 +67,7 @@ assign mem_rdata_raw = dmem_resp ? dmem_rdata : dmem_rdata_buffer;
 
 // Data Memory Logic
 logic [31:0] mem_addr;
-assign mem_addr = mem_stage_reg.alu_out;
+assign mem_addr = mem_stage_reg.func_out;
 
 logic [31:0] mem_rdata;
 always_comb begin
@@ -87,8 +87,8 @@ always_comb begin
   o_regf_we = mem_stage_reg.wb_ctrl.regf_we;
   o_rd_addr = mem_stage_reg.rd_addr;
   
-  if (mem_stage_reg.wb_ctrl.wb_mux == alu_out)
-    o_write_data = mem_stage_reg.alu_out;
+  if (mem_stage_reg.wb_ctrl.wb_mux == func_out)
+    o_write_data = mem_stage_reg.func_out;
   else
     o_write_data = mem_rdata;
 end

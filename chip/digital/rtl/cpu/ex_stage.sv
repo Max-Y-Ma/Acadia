@@ -10,7 +10,8 @@ import rv32imc_types::*;
   output logic [31:0] o_pc_offset,
 
   // Stall Signals
-  input logic ex_stall,
+  input  logic ex_stall,
+  output logic func_stall,
 
   // Flush Signals
   output logic o_flush,
@@ -27,7 +28,7 @@ import rv32imc_types::*;
 // Forwarding Unit
 forward_mux_t fwd_src_a;
 forward_mux_t fwd_src_b;
-forwarding_unit forwarding_unit (
+forwarding_unit forwarding_unit0 (
   .rs1_addr    (id_stage_reg.rs1_addr),
   .rs2_addr    (id_stage_reg.rs2_addr),
   .ex_rd_addr  (ex_stage_reg.rd_addr),
@@ -48,7 +49,7 @@ always_comb begin
 
   // Assign RS1 data based on forwarding unit
   if (fwd_src_a == ex_source) begin
-    fwd_src_a_data = ex_stage_reg.alu_out;
+    fwd_src_a_data = ex_stage_reg.func_out;
   end 
   else if (fwd_src_a == mem_source) begin
     fwd_src_a_data = i_wb_data;
@@ -59,7 +60,7 @@ always_comb begin
 
   // Assign RS2 data based on forwarding unit
   if (fwd_src_b == ex_source) begin
-    fwd_src_b_data = ex_stage_reg.alu_out;
+    fwd_src_b_data = ex_stage_reg.func_out;
   end 
   else if (fwd_src_b == mem_source) begin
     fwd_src_b_data = i_wb_data;
@@ -85,34 +86,77 @@ always_comb begin
 end
 
 // Arithmetic Logic Unit
-logic [31:0] f;
-alu alu (
+logic [31:0] alu_out;
+alu alu0 (
   .a       (a),
   .b       (b),
-  .alu_op  (id_stage_reg.ex_ctrl.alu_op),
-  .f       (f)
+  .alu_op  (id_stage_reg.ex_ctrl.func_op),
+  .alu_out (alu_out)
+);
+
+// Multiplier
+logic [31:0] mul_out;
+logic        mul_stall;
+logic        mul_start;
+assign       mul_start = (id_stage_reg.ex_ctrl.func_mux == mul_out);
+multiplier multiplier0 (
+  .clk(clk),
+  .rst(rst),
+  .a(a),
+  .b(b),
+  .start(mul_start),
+  .mul_op(id_stage_reg.ex_ctrl.func_op),
+  .mul_out(mul_out),
+  .mul_stall(mul_stall)
+);
+
+// Divider
+logic [31:0] div_out;
+logic        div_stall;
+logic        divide_by_0;
+logic        div_start;
+assign       div_start = (id_stage_reg.ex_ctrl.func_mux == div_out);
+divider divider0 (
+  .clk(clk),
+  .rst(rst),
+  .a(a),
+  .b(b),
+  .start(div_start),
+  .div_op(id_stage_reg.ex_ctrl.func_op),
+  .div_out(div_out),
+  .div_stall(div_stall),
+  .divide_by_0(divide_by_0)
 );
 
 // Comparator
 logic br_en;
-cmp cmp (
+cmp cmp0 (
   .a (a),
   .b (b),
-  .cmp_op (id_stage_reg.ex_ctrl.cmp_op),
+  .cmp_op (id_stage_reg.ex_ctrl.func_op),
   .br_en (br_en)
 );
 
+// Functional Unit Logic
+assign func_stall = mul_stall | div_stall;
+
 // ALU Output Logic
-logic [31:0] alu_out;
+logic [31:0] func_out;
 always_comb begin
-  if (id_stage_reg.ex_ctrl.aluout_mux == cmp_out) begin
-    alu_out = {31'd0, br_en};
+  if (id_stage_reg.ex_ctrl.func_mux == alu_out) begin
+    func_out = alu_out;
+  end
+  else if (id_stage_reg.ex_ctrl.func_mux == cmp_out) begin
+    func_out = {31'd0, br_en};
   end 
-  else if (id_stage_reg.ex_ctrl.aluout_mux == addr_out) begin
-    alu_out = id_stage_reg.pc + 'h4;
+  else if (id_stage_reg.ex_ctrl.func_mux == addr_out) begin
+    func_out = id_stage_reg.pc + 'h4;
+  end 
+  else if (id_stage_reg.ex_ctrl.func_mux == mul_out) begin
+    func_out = mul_out;
   end 
   else begin
-    alu_out = f;
+    func_out = div_out;
   end
 end
 
@@ -148,7 +192,7 @@ always_ff @(posedge clk) begin
   if (rst) begin
     // Reset Pipeline Registers
     ex_stage_reg.pc_next   <= '0;
-    ex_stage_reg.alu_out   <= '0;
+    ex_stage_reg.func_out  <= '0;
     ex_stage_reg.rs2_rdata <= '0;
     ex_stage_reg.rd_addr   <= '0;
     ex_stage_reg.mem_ctrl  <= '0;
@@ -156,7 +200,7 @@ always_ff @(posedge clk) begin
     ex_stage_reg.rvfi      <= '0;
   end else if (!ex_stall) begin
     // Latch Data Signals
-    ex_stage_reg.alu_out   <= alu_out;
+    ex_stage_reg.func_out  <= func_out;
     ex_stage_reg.rs2_rdata <= fwd_src_b_data;
     ex_stage_reg.rd_addr   <= id_stage_reg.rd_addr;
 

@@ -39,6 +39,9 @@ logic imem_stall;
 // in the current cycle. This current cycle, the processor does nothing.
 logic dmem_stall;
 
+// Indicates that a multicycle functional unit is currently executing
+logic func_stall;
+
 // Indicates a load hazards that must be resolved by stalling fetch and decode
 logic load_hazard;
 
@@ -48,15 +51,15 @@ logic id_stall;
 logic ex_stall; 
 logic mem_stall;
 logic wb_stall; 
-assign if_stall  = imem_stall | dmem_stall | load_hazard;
-assign id_stall  = imem_stall | dmem_stall;
-assign ex_stall  = imem_stall | dmem_stall;
-assign mem_stall = imem_stall | dmem_stall;
-assign wb_stall  = imem_stall | dmem_stall;
+assign if_stall  = imem_stall | dmem_stall | func_stall | load_hazard;
+assign id_stall  = imem_stall | dmem_stall | func_stall;
+assign ex_stall  = imem_stall | dmem_stall | func_stall;
+assign mem_stall = imem_stall | dmem_stall | func_stall;
+assign wb_stall  = imem_stall | dmem_stall | func_stall;
 
 pc_mux_t     pc_mux;
 logic [31:0] pc_offset;
-if_stage if_stage (
+if_stage if_stage0 (
   .clk          (clk),
   .rst          (rst),
   .i_pc_mux     (pc_mux),
@@ -71,7 +74,7 @@ if_stage if_stage (
 logic        wb_regf_we;
 logic [4:0]  wb_rd_addr;
 logic [31:0] wb_write_data;
-id_stage id_stage (
+id_stage id_stage0 (
   .clk           (clk),
   .rst           (rst),
   .i_regf_we     (wb_regf_we),
@@ -89,12 +92,13 @@ id_stage id_stage (
   .id_stage_reg  (id_stage_reg)
 );
 
-ex_stage ex_stage (
+ex_stage ex_stage0 (
   .clk           (clk),
   .rst           (rst),
   .o_pc_mux      (pc_mux),
   .o_pc_offset   (pc_offset),
   .ex_stall      (ex_stall),
+  .func_stall    (func_stall),
   .o_flush       (flush),
   .i_wb_data     (wb_write_data),
   .id_stage_reg  (id_stage_reg),
@@ -102,7 +106,7 @@ ex_stage ex_stage (
   .ex_stage_reg  (ex_stage_reg)
 );
 
-mem_stage mem_stage (
+mem_stage mem_stage0 (
   .clk           (clk),
   .rst           (rst),
   .mem_stall     (mem_stall),
@@ -114,7 +118,7 @@ mem_stage mem_stage (
   .mem_stage_reg (mem_stage_reg)
 );
 
-wb_stage wb_stage (
+wb_stage wb_stage0 (
   .clk           (clk),
   .rst           (rst),
   .o_regf_we     (wb_regf_we),

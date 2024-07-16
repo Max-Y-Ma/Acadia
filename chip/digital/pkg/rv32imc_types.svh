@@ -61,14 +61,14 @@ typedef enum bit [2:0] {
 } arith_imm_funct3_t;
 
 typedef enum bit [2:0] {
-  addr  = 3'b000,
-  sllr  = 3'b001,
-  sltr  = 3'b010,
-  sltru = 3'b011,
-  xorr  = 3'b100,
-  srr   = 3'b101, // Check bit 30 for logical/arithmetic
-  orr   = 3'b110,
-  andr  = 3'b111
+  addr   = 3'b000, // Check bit 30 and 25 for add, subtract, or multiply
+  sllr   = 3'b001, // Check bit 25 for multiply
+  sltr   = 3'b010, // Check bit 25 for multiply
+  sltru  = 3'b011, // Check bit 25 for multiply
+  xorr   = 3'b100, // Check bit 25 for divide
+  srr    = 3'b101, // Check bit 30 for logical/arithmetic or Check bit 25 for divide
+  orr    = 3'b110, // Check bit 25 for divide
+  andr   = 3'b111  // Check bit 25 for divide
 } arith_reg_funct3_t;
 
 typedef enum bit [2:0] { 
@@ -125,15 +125,17 @@ typedef enum bit {
   rs1_op = 1'b1
 } target_addr_mux_t;
 
-typedef enum bit [1:0] {
-  f_out     = 2'b00,
-  cmp_out   = 2'b01,
-  addr_out  = 2'b10
-} aluout_mux_t;
+typedef enum bit [2:0] {
+  alu_out   = 3'b000,
+  cmp_out   = 3'b001,
+  addr_out  = 3'b010,
+  mul_out   = 3'b011,
+  div_out   = 3'b100
+} func_mux_t;
 
 typedef enum bit {
   mem_rdata_out = 1'b0,
-  alu_out       = 1'b1
+  func_out      = 1'b1
 } wb_mux_t;
 
 /******************************************************************************\
@@ -142,13 +144,12 @@ typedef enum bit {
 
 // Control signals
 typedef struct packed {
-  alu1_mux_t   alu1_mux;
-  alu2_mux_t   alu2_mux;
-  aluout_mux_t aluout_mux;
+  alu1_mux_t        alu1_mux;
+  alu2_mux_t        alu2_mux;
+  func_mux_t        func_mux;
   target_addr_mux_t target_addr_mux;
-  logic        branch;
-  logic [2:0]  alu_op;
-  logic [2:0]  cmp_op;
+  logic             branch;
+  logic [2:0]       func_op;
 } ex_ctrl_t;
 
 typedef struct packed {
@@ -214,7 +215,7 @@ typedef struct packed {
   rvfi_signal_t rvfi;
 
   // Datapath Signals
-  logic [31:0] alu_out;
+  logic [31:0] func_out;
   logic [31:0] pc_next;
 
   // Control Signals
@@ -228,7 +229,7 @@ typedef struct packed {
   rvfi_signal_t rvfi;
 
   // Data Signals
-  logic [31:0] alu_out;
+  logic [31:0] func_out;
   logic [31:0] pc_next;
 
   // Control Signals

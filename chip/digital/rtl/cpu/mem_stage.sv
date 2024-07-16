@@ -21,7 +21,7 @@ import rv32imc_types::*;
 
 // Data Memory Logic
 logic [31:0] mem_addr;
-assign mem_addr = ex_stage_reg.alu_out;
+assign mem_addr = ex_stage_reg.func_out;
 always_comb begin
   dmem_addr = '0;
   dmem_rmask = '0;
@@ -77,14 +77,14 @@ always_ff @(posedge clk) begin
     // Reset Pipeline Registers
     mem_stage_reg.pc_next    <= '0;
     mem_stage_reg.rd_addr    <= '0;
-    mem_stage_reg.alu_out    <= '0;
+    mem_stage_reg.func_out   <= '0;
     mem_stage_reg.mem_ctrl   <= '0;
     mem_stage_reg.wb_ctrl    <= '0;
     mem_stage_reg.rvfi       <= '0;
   end else if (!mem_stall) begin
     // Latch Data Signals
-    mem_stage_reg.rd_addr <= ex_stage_reg.rd_addr;
-    mem_stage_reg.alu_out <= ex_stage_reg.alu_out;
+    mem_stage_reg.rd_addr  <= ex_stage_reg.rd_addr;
+    mem_stage_reg.func_out <= ex_stage_reg.func_out;
     
     // Latch Control Signals
     mem_stage_reg.mem_ctrl <= ex_stage_reg.mem_ctrl;

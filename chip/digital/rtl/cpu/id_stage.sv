@@ -79,7 +79,7 @@ logic [31:0]  imm;
 ex_ctrl_t     ex_ctrl;
 mem_ctrl_t    mem_ctrl;
 wb_ctrl_t     wb_ctrl;
-control_unit control_unit (
+control_unit control_unit0 (
   .inst(inst),
   .o_rs1_addr(rs1_addr),
   .o_rs2_addr(rs2_addr),
@@ -94,7 +94,7 @@ control_unit control_unit (
 logic [31:0] rs1_rdata, rs2_rdata;
 regfile #(
   .NUM_REGS(32)
-) regfile (
+) regfile0 (
   .clk(clk),
   .rst(rst),
   .regf_we(i_regf_we),
@@ -107,7 +107,7 @@ regfile #(
 );
 
 // Hazard Detection Unit
-detection_unit detection_unit (
+detection_unit detection_unit0 (
   .ex_mem_read(id_stage_reg.mem_ctrl.mem_read), // Current execute stage signal
   .ex_rd_addr(id_stage_reg.rd_addr),            // Current execute stage signal
   .rs1_addr(rs1_addr),

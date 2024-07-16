@@ -1,9 +1,10 @@
 module cmp
 import rv32imc_types::*;
 (
-  input  logic [31:0]  a, b,
-  input  logic [2:0]   cmp_op,
-  output logic         br_en
+  input  logic [31:0] a, 
+  input  logic [31:0] b,
+  input  logic [2:0]  cmp_op,
+  output logic        br_en
 );
 
 logic signed   [31:0] as;
