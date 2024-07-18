@@ -1,7 +1,7 @@
 module multiplier
 import rv32imc_types::*;
 # (
-  parameter DEPTH = 1
+  parameter DEPTH = 2
 ) (
   input logic clk, rst,
 
@@ -9,7 +9,8 @@ import rv32imc_types::*;
   input  logic [31:0] b,
   input  logic        start,
   input  logic [2:0]  mul_op,
-  output logic [31:0] mul_out,
+  input  logic [2:0]  mul_funct3,
+  output logic [31:0] mul_fout,
   output logic        mul_stall
 );
 
@@ -27,7 +28,8 @@ always_ff @ (posedge clk) begin
   end
 end
 
-assign mul_stall = mul_busy & ~done[DEPTH+1];
+assign mul_stall = start & ~done[DEPTH+1];
+assign done[0]   = start & ~mul_busy;
 
 /* Pipeline Signals */
 logic [63:0] mul_result [DEPTH+1:0];
@@ -56,12 +58,12 @@ logic [63:0] mul_p;
 assign mul_p = mul_result[DEPTH+1];
 
 always_comb begin
-  unique case (mul_op)
-    {1'b0, mulr}   : mul_out = mul_p[31:0];
-    {1'b0, mulhr}  : mul_out = mul_p[63:32];
-    {1'b0, mulhsur}: mul_out = mul_p[63:32];
-    {1'b0, mulhur} : mul_out = mul_p[63:32];
-    default        : mul_out = 'x;
+  unique case (mul_funct3)
+    mulr    : mul_fout = mul_p[31:0];
+    mulhr   : mul_fout = mul_p[63:32];
+    mulhsur : mul_fout = mul_p[63:32];
+    mulhur  : mul_fout = mul_p[63:32];
+    default        : mul_fout = 'x;
   endcase
 end
 

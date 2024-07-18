@@ -9,7 +9,7 @@ import rv32imc_types::*;
   input  logic [31:0] b,
   input  logic        start,
   input  logic [2:0]  div_op,
-  output logic [31:0] div_out,
+  output logic [31:0] div_fout,
   output logic        div_stall,
   output logic        divide_by_0
 );
@@ -40,8 +40,8 @@ always_ff @(posedge clk) begin
 end
 
 /* Request & Reply interface assignments */
-assign div_valid = (udiv_valid | sdiv_valid) & div_busy & ~start;
-assign div_stall = div_busy & ~div_valid;
+assign div_valid = (udiv_valid | sdiv_valid) & div_busy;
+assign div_stall = start & ~div_valid;
 
 DW_div_seq #(
   .a_width(BIT_WIDTH),
@@ -53,7 +53,7 @@ DW_div_seq #(
   .clk(clk),
   .rst_n(~rst),
   .hold(~div_busy),
-  .start(start),
+  .start(start & ~div_busy),
   .a(a),
   .b(b),
   .complete(udiv_valid),
@@ -72,7 +72,7 @@ DW_div_seq #(
   .clk(clk),
   .rst_n(~rst),
   .hold(~div_busy),
-  .start(start),
+  .start(start & ~div_busy),
   .a(a),
   .b(b),
   .complete(sdiv_valid),
@@ -87,11 +87,11 @@ assign divide_by_0 = udiv_exception | sdiv_exception;
 /* Result Calculations */
 always_comb begin
   unique case (div_op)
-    {1'b0, ss_div}: div_out = sdiv_quo;
-    {1'b0, uu_div}: div_out = udiv_quo;
-    {1'b0, ss_rem}: div_out = sdiv_rem;
-    {1'b0, uu_rem}: div_out = udiv_rem;
-    default:        div_out = 'x;
+    {1'b0, ss_div}: div_fout = sdiv_quo;
+    {1'b0, uu_div}: div_fout = udiv_quo;
+    {1'b0, ss_rem}: div_fout = sdiv_rem;
+    {1'b0, uu_rem}: div_fout = udiv_rem;
+    default:        div_fout = 'x;
   endcase
 end
 

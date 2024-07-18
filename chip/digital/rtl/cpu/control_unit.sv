@@ -53,6 +53,7 @@ always_comb begin
   ex_ctrl.target_addr_mux = pc_op;
   ex_ctrl.branch          = '0;
   ex_ctrl.func_op         = '0;
+  ex_ctrl.funct3          = funct3;
   mem_ctrl.mem_write      = '0;
   mem_ctrl.mem_read       = '0;
   mem_ctrl.mem_funct3     = '0;

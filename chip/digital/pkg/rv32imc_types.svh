@@ -71,7 +71,7 @@ typedef enum bit [2:0] {
   andr   = 3'b111  // Check bit 25 for divide
 } arith_reg_funct3_t;
 
-typedef enum bit [2:0] { 
+typedef enum bit [2:0] {
   mulr    = 3'b000,
   mulhr   = 3'b001,
   mulhsur = 3'b010,
@@ -150,6 +150,7 @@ typedef struct packed {
   target_addr_mux_t target_addr_mux;
   logic             branch;
   logic [2:0]       func_op;
+  logic [2:0]       funct3;
 } ex_ctrl_t;
 
 typedef struct packed {

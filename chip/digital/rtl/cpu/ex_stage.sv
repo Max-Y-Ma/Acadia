@@ -86,16 +86,16 @@ always_comb begin
 end
 
 // Arithmetic Logic Unit
-logic [31:0] alu_out;
+logic [31:0] alu_fout;
 alu alu0 (
   .a       (a),
   .b       (b),
   .alu_op  (id_stage_reg.ex_ctrl.func_op),
-  .alu_out (alu_out)
+  .alu_fout (alu_fout)
 );
 
 // Multiplier
-logic [31:0] mul_out;
+logic [31:0] mul_fout;
 logic        mul_stall;
 logic        mul_start;
 assign       mul_start = (id_stage_reg.ex_ctrl.func_mux == mul_out);
@@ -106,12 +106,13 @@ multiplier multiplier0 (
   .b(b),
   .start(mul_start),
   .mul_op(id_stage_reg.ex_ctrl.func_op),
-  .mul_out(mul_out),
+  .mul_funct3(id_stage_reg.ex_ctrl.funct3),
+  .mul_fout(mul_fout),
   .mul_stall(mul_stall)
 );
 
 // Divider
-logic [31:0] div_out;
+logic [31:0] div_fout;
 logic        div_stall;
 logic        divide_by_0;
 logic        div_start;
@@ -123,7 +124,7 @@ divider divider0 (
   .b(b),
   .start(div_start),
   .div_op(id_stage_reg.ex_ctrl.func_op),
-  .div_out(div_out),
+  .div_fout(div_fout),
   .div_stall(div_stall),
   .divide_by_0(divide_by_0)
 );
@@ -144,7 +145,7 @@ assign func_stall = mul_stall | div_stall;
 logic [31:0] func_out;
 always_comb begin
   if (id_stage_reg.ex_ctrl.func_mux == alu_out) begin
-    func_out = alu_out;
+    func_out = alu_fout;
   end
   else if (id_stage_reg.ex_ctrl.func_mux == cmp_out) begin
     func_out = {31'd0, br_en};
@@ -153,10 +154,10 @@ always_comb begin
     func_out = id_stage_reg.pc + 'h4;
   end 
   else if (id_stage_reg.ex_ctrl.func_mux == mul_out) begin
-    func_out = mul_out;
+    func_out = mul_fout;
   end 
   else begin
-    func_out = div_out;
+    func_out = div_fout;
   end
 end
 
