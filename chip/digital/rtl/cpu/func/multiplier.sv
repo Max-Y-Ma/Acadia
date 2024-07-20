@@ -28,7 +28,7 @@ always_ff @ (posedge clk) begin
   end
 end
 
-assign mul_stall = start & ~done[DEPTH+1];
+assign mul_stall = (start || mul_busy) & ~done[DEPTH+1];
 assign done[0]   = start & ~mul_busy;
 
 /* Pipeline Signals */

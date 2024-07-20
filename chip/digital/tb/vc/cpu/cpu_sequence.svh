@@ -48,14 +48,19 @@ class randInstr;
     instr_type[1] -> {
       instr.r_type.opcode == op_reg;
 
-      // If funct3 is add or sr, then funct7 must be base or variant
-      if (instr.r_type.funct3 == addr || instr.r_type.funct3 == srr) {
-        instr.r_type.funct7 inside {base, variant};
-      } 
-      // For all other funct3, then funct7 must be base
-      else {
+      // Adjust Funct7 for M and I extension variants
+// srr
+      if (instr.r_type.funct3 inside {addr} ) {
+        instr.r_type.funct7 inside {base, variant, mult_variant};
+      } else if (instr.r_type.funct3 inside {sllr, sltr, sltru}) {
+        instr.r_type.funct7 inside {base, mult_variant};
+      } else {
         instr.r_type.funct7 == base;
       }
+
+//       xorr
+// orr
+// andr
     }
 
     // Store instructions -- these are easy to constrain!
@@ -86,11 +91,11 @@ class randInstr;
 
       // Constraint immediate to 2-byte or 4-byte alignment
       (instr.i_type.funct3 == lw) -> {
-      instr.i_type.i_imm[1:0] == 2'b00;
+        instr.i_type.i_imm[1:0] == 2'b00;
       }
 
       (instr.i_type.funct3 == lh || instr.i_type.funct3 == lhu) -> {
-      instr.i_type.i_imm[1:0] inside {2'b00, 2'b10};
+        instr.i_type.i_imm[1:0] inside {2'b00, 2'b10};
       }
     }
 

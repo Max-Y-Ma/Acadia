@@ -88,23 +88,40 @@ end
 // Arithmetic Logic Unit
 logic [31:0] alu_fout;
 alu alu0 (
-  .a       (a),
-  .b       (b),
-  .alu_op  (id_stage_reg.ex_ctrl.func_op),
+  .a        (a),
+  .b        (b),
+  .alu_op   (id_stage_reg.ex_ctrl.func_op),
   .alu_fout (alu_fout)
 );
 
 // Multiplier
 logic [31:0] mul_fout;
 logic        mul_stall;
-logic        mul_start;
-assign       mul_start = (id_stage_reg.ex_ctrl.func_mux == mul_out);
+logic        multiply;
+assign       multiply = (id_stage_reg.ex_ctrl.func_mux == mul_out);
+
+// Pulse the multiply start signal
+logic mul_start;
+logic mul_start_strobe;
+always_ff @(posedge clk) begin
+  // Restart upon next pipeline stage
+  if (rst || !ex_stall) begin
+    mul_start <= 1'b0;
+  end
+  // Check for multiply instruction
+  else if (multiply) begin
+    mul_start <= 1'b1;
+  end
+end
+
+assign mul_start_strobe = multiply & ~mul_start;
+
 multiplier multiplier0 (
   .clk(clk),
   .rst(rst),
   .a(a),
   .b(b),
-  .start(mul_start),
+  .start(mul_start_strobe),
   .mul_op(id_stage_reg.ex_ctrl.func_op),
   .mul_funct3(id_stage_reg.ex_ctrl.funct3),
   .mul_fout(mul_fout),
@@ -115,14 +132,31 @@ multiplier multiplier0 (
 logic [31:0] div_fout;
 logic        div_stall;
 logic        divide_by_0;
-logic        div_start;
-assign       div_start = (id_stage_reg.ex_ctrl.func_mux == div_out);
+logic        divide;
+assign       divide = (id_stage_reg.ex_ctrl.func_mux == div_out);
+
+// Pulse the divide start signal
+logic div_start;
+logic div_start_strobe;
+always_ff @(posedge clk) begin
+  // Restart upon next pipeline stage
+  if (rst || !ex_stall) begin
+    div_start <= 1'b0;
+  end
+  // Check for divide instruction
+  else if (divide) begin
+    div_start <= 1'b1;
+  end
+end
+
+assign div_start_strobe = divide & ~div_start;
+
 divider divider0 (
   .clk(clk),
   .rst(rst),
   .a(a),
   .b(b),
-  .start(div_start),
+  .start(div_start_strobe),
   .div_op(id_stage_reg.ex_ctrl.func_op),
   .div_fout(div_fout),
   .div_stall(div_stall),

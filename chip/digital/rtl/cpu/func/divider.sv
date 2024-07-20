@@ -41,7 +41,7 @@ end
 
 /* Request & Reply interface assignments */
 assign div_valid = (udiv_valid | sdiv_valid) & div_busy;
-assign div_stall = start & ~div_valid;
+assign div_stall = (start || div_busy) & ~div_valid;
 
 DW_div_seq #(
   .a_width(BIT_WIDTH),
