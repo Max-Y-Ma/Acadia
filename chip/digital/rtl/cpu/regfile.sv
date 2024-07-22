@@ -5,7 +5,7 @@ module regfile #(
   input  logic        clk, rst,
   input  logic        regf_we,
   input  logic [31:0] rd_wdata,
-  input  logic [4:0]  rs1_addr, rs2_addr, rd_addr,
+  input  logic [4:0]  rd_addr, rs1_addr, rs2_addr,
   output logic [31:0] rs1_rdata, rs2_rdata
 );
 

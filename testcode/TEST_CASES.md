@@ -1,4 +1,4 @@
-## Out-Of-Order Competition Tests
+## Benchmarks
 
 These are some of the test cases we will run on your out-of-order processor for the competition. 
 

@@ -49,11 +49,11 @@ always_comb begin
   o_imm                   = '0;
   ex_ctrl.alu1_mux        = rs1_out;
   ex_ctrl.alu2_mux        = rs2_out;
-  ex_ctrl.aluout_mux      = f_out;
+  ex_ctrl.func_mux        = alu_out;
   ex_ctrl.target_addr_mux = pc_op;
   ex_ctrl.branch          = '0;
-  ex_ctrl.alu_op          = '0;
-  ex_ctrl.cmp_op          = '0;
+  ex_ctrl.func_op         = '0;
+  ex_ctrl.funct3          = funct3;
   mem_ctrl.mem_write      = '0;
   mem_ctrl.mem_read       = '0;
   mem_ctrl.mem_funct3     = '0;
@@ -74,15 +74,15 @@ always_comb begin
     op_lui: begin
       // Datapath
       o_rs1_addr = '0;
-      o_rd_addr = rd_addr;
-      o_imm = u_imm;
+      o_rd_addr  = rd_addr;
+      o_imm      = u_imm;
       
       // Execute
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.func_op   = alu_add;
 
       // Write Back
-      wb_ctrl.wb_mux = alu_out;
+      wb_ctrl.wb_mux  = func_out;
       wb_ctrl.regf_we = 1'b1;
     end
     /**
@@ -96,15 +96,15 @@ always_comb begin
     op_auipc: begin
       // Datapath
       o_rd_addr = rd_addr;
-      o_imm = u_imm;
+      o_imm     = u_imm;
 
       // Execute
       ex_ctrl.alu1_mux = pc_out;
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.func_op   = alu_add;
 
       // Write Back
-      wb_ctrl.wb_mux = alu_out;
+      wb_ctrl.wb_mux  = func_out;
       wb_ctrl.regf_we = 1'b1;
     end
     /**
@@ -123,12 +123,12 @@ always_comb begin
       o_imm      = j_imm;
 
       // Execute
-      ex_ctrl.cmp_op     = beq;   // Garuntee Branch
-      ex_ctrl.aluout_mux = addr_out;
+      ex_ctrl.func_op     = beq;   // Garuntee Branch
+      ex_ctrl.func_mux   = addr_out;
       ex_ctrl.branch     = '1;
 
       // Write Back
-      wb_ctrl.wb_mux  = alu_out;
+      wb_ctrl.wb_mux  = func_out;
       wb_ctrl.regf_we = 1'b1;
     end
     /**
@@ -142,19 +142,19 @@ always_comb begin
     */
     op_jalr: begin
       // Datapath
-      o_rs1_addr      = rs1_addr; // Garuntee Branch
-      o_rs2_addr      = rs1_addr; // Garuntee Branch
-      o_rd_addr       = rd_addr;
-      o_imm           = i_imm;
+      o_rs1_addr = rs1_addr; // Garuntee Branch
+      o_rs2_addr = rs1_addr; // Garuntee Branch
+      o_rd_addr  = rd_addr;
+      o_imm      = i_imm;
 
       // Execute
-      ex_ctrl.cmp_op     = beq;      // Garuntee Branch
-      ex_ctrl.aluout_mux = addr_out; 
+      ex_ctrl.func_op         = beq;      // Garuntee Branch
+      ex_ctrl.func_mux        = addr_out; 
       ex_ctrl.target_addr_mux = rs1_op;
       ex_ctrl.branch          = '1;
 
       // Write Back
-      wb_ctrl.wb_mux = alu_out;
+      wb_ctrl.wb_mux = func_out;
       wb_ctrl.regf_we = 1'b1;
     end
     /**
@@ -193,11 +193,11 @@ always_comb begin
     */
     op_br: begin
       // Datapath
-      o_rs1_addr = rs1_addr;
-      o_rs2_addr = rs2_addr;
-      o_imm      = b_imm;
-      ex_ctrl.cmp_op = funct3;
-      ex_ctrl.branch          = '1;
+      o_rs1_addr     = rs1_addr;
+      o_rs2_addr     = rs2_addr;
+      o_imm          = b_imm;
+      ex_ctrl.func_op = funct3;
+      ex_ctrl.branch = '1;
     end
     /**
     * The Load Byte (LB) instruction, moves a byte from memory to register. 
@@ -226,22 +226,22 @@ always_comb begin
     op_load: begin
       // Datapath
       o_rs1_addr = rs1_addr;
-      o_rd_addr = rd_addr;
-      o_imm = i_imm;
+      o_rd_addr  = rd_addr;
+      o_imm      = i_imm;
 
       // Execute
       ex_ctrl.alu1_mux = rs1_out;
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.func_op   = alu_add;
 
       // Data Memory
-      mem_ctrl.mem_read  = 1'b1;
+      mem_ctrl.mem_read   = 1'b1;
       mem_ctrl.mem_funct3 = funct3;
 
       // Write Back
-      wb_ctrl.wb_mux = mem_rdata_out;
+      wb_ctrl.wb_mux     = mem_rdata_out;
       wb_ctrl.mem_funct3 = funct3;
-      wb_ctrl.regf_we = 1'b1;
+      wb_ctrl.regf_we    = 1'b1;
     end
     /**
     * Store Byte (SB), stores 8-bit values from a register to memory.
@@ -259,15 +259,15 @@ always_comb begin
       // Datapath
       o_rs1_addr = rs1_addr;
       o_rs2_addr = rs2_addr;
-      o_imm = s_imm;
+      o_imm      = s_imm;
 
       // Execute
       ex_ctrl.alu1_mux = rs1_out;
       ex_ctrl.alu2_mux = imm_out;
-      ex_ctrl.alu_op = alu_add;
+      ex_ctrl.func_op   = alu_add;
 
       // Data Memory
-      mem_ctrl.mem_write = 1'b1;
+      mem_ctrl.mem_write  = 1'b1;
       mem_ctrl.mem_funct3 = funct3;
     end
     /**
@@ -324,31 +324,32 @@ always_comb begin
       ex_ctrl.alu2_mux = imm_out;
 
       // Write Back
-      wb_ctrl.wb_mux   = alu_out;
+      wb_ctrl.wb_mux   = func_out;
       wb_ctrl.regf_we  = 1'b1;
 
       // Op-Specific Control Signals
       unique case (funct3) 
-        addi : ex_ctrl.alu_op = alu_add;
-        slli : ex_ctrl.alu_op = alu_sll;
+        addi : ex_ctrl.func_op = alu_add;
+        slli : ex_ctrl.func_op = alu_sll;
         slti : begin
-          ex_ctrl.cmp_op = blt;
-          ex_ctrl.aluout_mux = cmp_out;
+          ex_ctrl.func_op = blt;
+          ex_ctrl.func_mux = cmp_out;
         end
         sltiu : begin
-          ex_ctrl.cmp_op = bltu;
-          ex_ctrl.aluout_mux = cmp_out;
+          ex_ctrl.func_op = bltu;
+          ex_ctrl.func_mux = cmp_out;
         end
-        xori : ex_ctrl.alu_op = alu_xor;
+        xori : ex_ctrl.func_op = alu_xor;
         sri : begin
           if (funct7 == 7'h20) begin
-            ex_ctrl.alu_op = alu_sra;
-          end else begin
-            ex_ctrl.alu_op = alu_srl;
+            ex_ctrl.func_op = alu_sra;
+          end 
+          else begin
+            ex_ctrl.func_op = alu_srl;
           end
         end
-        ori : ex_ctrl.alu_op = alu_or;
-        andi : ex_ctrl.alu_op = alu_and;
+        ori : ex_ctrl.func_op = alu_or;
+        andi : ex_ctrl.func_op = alu_and;
       endcase
     end
     /**
@@ -384,6 +385,24 @@ always_comb begin
     * AND directive performs bit-wise logical AND operation between contents of 
     * register (rs1) and contents of register (rs2) and stores in (rd) register.
     *
+    * MUL calculates the product of the multiplier in source register 1 (rs1) 
+    * and multiplicand in source register 2 (rs2), with the resulting product
+    * being stored in destination register (rd).
+    *
+    * Multiply signed and return upper bits (MULH) calculates the product of
+    * signed values in source registers (rs1) and (rs2) and stores result in
+    * the specified destination register (rd).
+    *
+    * Multiply Unsigned and return upper bits (MULHU) calculates the product 
+    * of two unsigned values in source registers rs1 and rs2. The resulting 
+    * value is placed in the specified destination register (rd).
+    *
+    * Multiply Signed-Unsigned and return upper bits (MULHSU) calculates the 
+    * product of a signed value in source register rs1 with an unsigned value 
+    * in source register rs2 and the resulting product is stored in 
+    * destination register, rd.
+    *
+    *
     * Syntax:
     * - add rd, rs1, rs2
     * - sub rd, rs1, rs2
@@ -395,6 +414,10 @@ always_comb begin
     * - sltu rd, rs1, rs2
     * - or rd, rs1, rs2
     * - and rd, rs1, rs2
+    * - mul rd, rs1, rs2
+    * - mulh rd, rs1, rs2
+    * - mulhu rd, rs1, rs2
+    * - mulhsu rd, rs1, rs2
     */
     op_reg: begin
       // Common Control Signals
@@ -403,37 +426,86 @@ always_comb begin
       o_rd_addr        = rd_addr;
       
       // Write Back
-      wb_ctrl.wb_mux   = alu_out;
+      wb_ctrl.wb_mux   = func_out;
       wb_ctrl.regf_we  = 1'b1;
 
       // Op-Specific Control Signals
       unique case (funct3)
         addr : begin
-          if (funct7 == 7'h20) begin
-            ex_ctrl.alu_op = alu_sub;
-          end else begin
-            ex_ctrl.alu_op = alu_add;
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = ss_mul;
+            ex_ctrl.func_mux = mul_out;
+          end 
+          else begin
+            ex_ctrl.func_op = (funct7 == 7'h20) ? alu_sub : alu_add;
           end
         end
-        sllr : ex_ctrl.alu_op = alu_sll;
+        sllr : begin
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = ss_mul;
+            ex_ctrl.func_mux = mul_out;
+          end 
+          else begin
+            ex_ctrl.func_op = alu_sll;
+          end
+        end
         sltr : begin
-          ex_ctrl.cmp_op = blt;
-          ex_ctrl.aluout_mux = cmp_out;
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = su_mul;
+            ex_ctrl.func_mux = mul_out;
+          end 
+          else begin
+            ex_ctrl.func_op = blt;
+            ex_ctrl.func_mux = cmp_out;
+
+          end
         end
         sltru : begin
-          ex_ctrl.cmp_op = bltu;
-          ex_ctrl.aluout_mux = cmp_out;
-        end
-        xorr : ex_ctrl.alu_op = alu_xor;
-        srr : begin
-          if (funct7 == 7'h20) begin
-            ex_ctrl.alu_op = alu_sra;
-          end else begin
-            ex_ctrl.alu_op = alu_srl;
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = uu_mul;
+            ex_ctrl.func_mux = mul_out;
+          end 
+          else begin
+            ex_ctrl.func_op = bltu;
+            ex_ctrl.func_mux = cmp_out;
           end
         end
-        orr  : ex_ctrl.alu_op = alu_or;
-        andr : ex_ctrl.alu_op = alu_and;
+        xorr : begin
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = ss_div;
+            ex_ctrl.func_mux = div_out;
+          end 
+          else begin
+            ex_ctrl.func_op = alu_xor;
+          end
+        end
+        srr : begin
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = uu_div;
+            ex_ctrl.func_mux = div_out;
+          end 
+          else begin
+            ex_ctrl.func_op = (funct7 == 7'h20) ? alu_sra : alu_srl;
+          end
+        end
+        orr  : begin
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = ss_rem;
+            ex_ctrl.func_mux = div_out;
+          end 
+          else begin
+            ex_ctrl.func_op = alu_or;
+          end
+        end
+        andr : begin
+          if (funct7 == 7'h01) begin
+            ex_ctrl.func_op = uu_rem;
+            ex_ctrl.func_mux = div_out;
+          end 
+          else begin
+            ex_ctrl.func_op = alu_and;
+          end
+        end
       endcase
     end
     default : begin

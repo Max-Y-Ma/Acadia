@@ -1,3 +1,5 @@
+import "DPI-C" function string getenv(input string env_name);
+
 `ifdef RANDOM
   `include "cpu_pkg.svh"
 `endif
@@ -14,15 +16,15 @@ timeprecision 1ps;
 `endif
 
 // Clock Generation
-`define CLK_HALF_PERIOD (5)
+int clock_half_period_ps = getenv("ECE411_CLOCK_PERIOD_PS").atoi() / 2;
+
 bit clk;
-always #(`CLK_HALF_PERIOD) clk = ~clk;
+always #(clock_half_period_ps) clk = ~clk;
 
 bit rst;
 
 // Memory Interface
-mem_itf mem_itf_i(.clk(clk), .rst(rst));
-mem_itf mem_itf_d(.clk(clk), .rst(rst));
+banked_mem_itf bmem_itf(.*);
 
 // Monitor Interface
 mon_itf mon_itf(.*);    
@@ -38,32 +40,28 @@ monitor monitor(.itf(mon_itf));
   end
 `else
   // Memory Types for Directed Test
-  // magic_dual_port mem(.itf_i(mem_itf_i), .itf_d(mem_itf_d));
-  ordinary_dual_port mem(.itf_i(mem_itf_i), .itf_d(mem_itf_d));
+  banked_memory mem(.itf(bmem_itf));
+  // random_banked_memory random_banked_memory(.itf(bmem_itf));
 `endif
 
 // DUT Instantiation
-cpu dut(
+core dut(
   .clk            (clk),
   .rst            (rst),
 
-  // Instruction Memory Port
-  .imem_addr      (mem_itf_i.addr),
-  .imem_rmask     (mem_itf_i.rmask),
-  .imem_rdata     (mem_itf_i.rdata),
-  .imem_resp      (mem_itf_i.resp),
+  .bmem_addr      (bmem_itf.addr),
+  .bmem_read      (bmem_itf.read),
+  .bmem_write     (bmem_itf.write),
+  .bmem_wdata     (bmem_itf.wdata),
+  .bmem_ready     (bmem_itf.ready),
 
-  // Data Memory Port
-  .dmem_addr      (mem_itf_d.addr),
-  .dmem_rmask     (mem_itf_d.rmask),
-  .dmem_wmask     (mem_itf_d.wmask),
-  .dmem_rdata     (mem_itf_d.rdata),
-  .dmem_wdata     (mem_itf_d.wdata),
-  .dmem_resp      (mem_itf_d.resp)
+  .bmem_raddr     (bmem_itf.raddr),
+  .bmem_rdata     (bmem_itf.rdata),
+  .bmem_rvalid    (bmem_itf.rvalid)
 );
 
 // Monitor Interface DUT Wiring
-`include "../../chip/digital/tb/vc/cpu/rvfi_reference.svh"
+`include "../../chip/digital/tb/vc/core/rvfi_reference.svh"
 
 // Waveform Dumpfiles and Reset
 initial begin
@@ -88,13 +86,9 @@ always @(posedge clk) begin
     repeat (5) @(posedge clk);
     $finish;
   end
-  if (mem_itf_i.error != 0) begin
-    repeat (5) @(posedge clk);
-    $finish;
-  end
-  if (mem_itf_d.error != 0) begin
-    repeat (5) @(posedge clk);
-    $finish;
+  if (bmem_itf.error != 0) begin
+      repeat (5) @(posedge clk);
+      $finish;
   end
   timeout_cycles <= timeout_cycles - 1;
 end

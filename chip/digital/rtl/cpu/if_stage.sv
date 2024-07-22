@@ -3,17 +3,19 @@ module if_stage
 import rv32imc_types::*;
 (
   // Synchronous Signals
-  input  logic        clk, rst,
+  input  logic clk, rst,
 
   // Control/Datapath Signals
   input  pc_mux_t     i_pc_mux,
-  input  logic [31:0] i_pc_imm,
+  input  logic [31:0] i_pc_offset,
+
+  // Flush Signals
+  input  logic i_flush,
 
   // Stall Signals
-  input  logic        if_reg_we,
+  input  logic if_stall,
 
   // Instruction Memory Ports
-  input  logic        imem_resp,
   output logic [31:0] imem_addr,
   output logic [3:0]  imem_rmask,
 
@@ -25,36 +27,31 @@ import rv32imc_types::*;
 logic [31:0] pc;
 logic [31:0] pc_next;
 always_ff @(posedge clk) begin
+  // Set program counter to reset vector upon a reset
   if (rst) begin
     pc <= 32'h60000000;
-  end else if (if_reg_we) begin
+  end
+  // During a flush cycle, the target address will be read from memory. So the
+  // program counter should be set to the next instruction from the target
+  // address
+  else if (i_flush && !if_stall) begin
+    pc <= pc_next + 'd4;
+  end
+  // Otherwise, we can set program counter to next state
+  else if (!if_stall) begin
     pc <= pc_next;
-  end else begin
-    pc <= pc;
   end
 end
 
 // Program Counter Logic
-assign pc_next = (i_pc_mux == pc_offset) ? (i_pc_imm) : (pc + 'd4);
+assign pc_next = (i_pc_mux == pc_offset) ? (i_pc_offset) : (pc + 'd4);
 
-// We only want to read from instruction memory once, despite stall cycles
-logic imem_rmask_re;
-always_ff @(posedge clk) begin
-  // We are allowed to read after a reset or non-stall cycle
-  if (rst || if_reg_we) begin
-    imem_rmask_re <= 1'b1;
-  end 
-  // We are not allowed to read on stall cycles
-  else begin
-    imem_rmask_re <= 1'b0;
-  end
-end
+// Assign instruction memory address to the branch target address during a 
+// flush cycle in which a branch was taken, otherwise just the current pc.
+assign imem_addr = i_flush ? pc_next : pc;
 
-// Instruction Memory Logic
-assign imem_addr = (if_reg_we) ? pc_next : pc;
-
-// Assert read mask on read enable cycle
-assign imem_rmask = (imem_rmask_re || imem_resp) ? 4'hF : 4'b0;
+// Assert read mask unless we are stalled
+assign imem_rmask = (!if_stall) ? 4'hF : 4'b0;
 
 // Latch to Pipeline Registers
 always_ff @(posedge clk) begin
@@ -63,15 +60,15 @@ always_ff @(posedge clk) begin
     if_stage_reg.pc      <= '0;
     if_stage_reg.pc_next <= '0;
     if_stage_reg.rvfi    <= '0;
-  end else begin
+  end else if (!if_stall) begin
     // Latch Program Counters
     if_stage_reg.pc      <= imem_addr;
-    if_stage_reg.pc_next <= (imem_addr + 'd4);
+    if_stage_reg.pc_next <= imem_addr + 'd4;
 
     // Latch RVFI Signals
     if_stage_reg.rvfi.valid    <= 1'b1;
     if_stage_reg.rvfi.pc_rdata <= imem_addr;
-    if_stage_reg.rvfi.pc_wdata <= (imem_addr + 'd4);
+    if_stage_reg.rvfi.pc_wdata <= imem_addr + 'd4;
   end
 end
 
