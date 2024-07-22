@@ -73,6 +73,9 @@ always_comb begin
   end
 end
 
+// TODO: Add compressed instruction decoder that converts a 16-bit instruction 
+// to 32-bit normal instruction. Output compressed signal
+
 // Control Unit
 logic [4:0]   rs1_addr, rs2_addr, rd_addr;
 logic [31:0]  imm;

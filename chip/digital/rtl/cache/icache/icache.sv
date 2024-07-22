@@ -26,6 +26,9 @@ import cache_types::*;
     input   logic           dfp_resp
 );
 
+    // TODO: Understand this cache or import ours. Add the double request
+    // feature for misalignment across cache lines. 
+
     /* Cache Control Signals */
     logic             cache_read_request;
     logic             write_from_mem;

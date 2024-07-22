@@ -31,6 +31,7 @@ always_ff @(posedge clk) begin
   if (rst) begin
     pc <= 32'h60000000;
   end
+  // TODO: Rewrite to account for new compression next instruction issue.
   // During a flush cycle, the target address will be read from memory. So the
   // program counter should be set to the next instruction from the target
   // address
@@ -43,13 +44,17 @@ always_ff @(posedge clk) begin
   end
 end
 
-// Program Counter Logic
+// TODO: Program Counter Logic
+// Branching takes the most priority since we jump to offset address and flush
+// Otherwise we increment by two if the previous instruction was compressed
+// Else we increment by four for a normal instruction
 assign pc_next = (i_pc_mux == pc_offset) ? (i_pc_offset) : (pc + 'd4);
 
+// TODO: Rewrite to account for new compression next instruction issue.
 // Assign instruction memory address to the branch target address during a 
 // flush cycle in which a branch was taken, otherwise just the current pc.
 assign imem_addr = i_flush ? pc_next : pc;
-
+ 
 // Assert read mask unless we are stalled
 assign imem_rmask = (!if_stall) ? 4'hF : 4'b0;
 

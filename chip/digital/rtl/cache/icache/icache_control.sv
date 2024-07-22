@@ -28,6 +28,9 @@ import cache_types::*;
   output logic ready
 );
 
+// TODO: Understand this cache or import ours. Add the double request
+// feature for misalignment across cache lines. 
+
 controller_state_t curr_state;
 controller_state_t next_state;
 
