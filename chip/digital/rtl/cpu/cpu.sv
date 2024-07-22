@@ -98,6 +98,7 @@ ex_stage ex_stage0 (
   .o_pc_mux      (pc_mux),
   .o_pc_offset   (pc_offset),
   .ex_stall      (ex_stall),
+  .dmem_stall    (dmem_stall),
   .func_stall    (func_stall),
   .o_flush       (flush),
   .i_wb_data     (wb_write_data),

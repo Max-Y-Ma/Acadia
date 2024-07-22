@@ -71,12 +71,11 @@ _start:
     add	    x30, x29, x28
     mul	    x31, x30, x29
 
-    addi    x1, x0, -7
+    addi    x1, x0, -8
     addi    x2, x0, -7
     div     x3, x1, x2
-    divu    x4, x3, x2
-    rem     x5, x4, x1
-    remu    x6, x5, x4
+    add     x4, x3, x3
+    add     x4, x3, x3
     
     # Test load/store instructions
     # Load the RAM address into x7

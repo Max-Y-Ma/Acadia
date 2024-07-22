@@ -11,6 +11,7 @@ import rv32imc_types::*;
 
   // Stall Signals
   input  logic ex_stall,
+  input  logic dmem_stall,
   output logic func_stall,
 
   // Flush Signals
@@ -39,7 +40,7 @@ forwarding_unit forwarding_unit0 (
   .fwd_src_b   (fwd_src_b)
 );
 
-// ALU Source Operands
+// Source Operands
 logic [31:0] a, b;
 logic [31:0] fwd_src_a_data, fwd_src_b_data;
 always_comb begin
@@ -85,6 +86,10 @@ always_comb begin
   end
 end
 
+// Memory forward conditions
+logic mem_forward;
+assign mem_forward = (fwd_src_a == mem_source) | (fwd_src_b == mem_source);
+
 // Arithmetic Logic Unit
 logic [31:0] alu_fout;
 alu alu0 (
@@ -95,26 +100,33 @@ alu alu0 (
 );
 
 // Multiplier
+logic mul_stall;
 logic [31:0] mul_fout;
-logic        mul_stall;
-logic        multiply;
-assign       multiply = (id_stage_reg.ex_ctrl.func_mux == mul_out);
 
-// Pulse the multiply start signal
+// Current operation is a multiplication
+logic multiply;
+assign multiply = (id_stage_reg.ex_ctrl.func_mux == mul_out);
+
+// Activate a multiply operation during a multiplication instruction.
+// If there is a forward condition from memory wait until dmem_response.
+logic mul_activate;
+assign mul_activate = (multiply && !mem_forward) || (multiply && !dmem_stall);
+
+// Pulse the multiply start signal for the operation to begin
 logic mul_start;
 logic mul_start_strobe;
 always_ff @(posedge clk) begin
-  // Restart upon next pipeline stage
   if (rst || !ex_stall) begin
     mul_start <= 1'b0;
   end
-  // Check for multiply instruction
-  else if (multiply) begin
+  else if (mul_activate) begin
     mul_start <= 1'b1;
   end
 end
 
-assign mul_start_strobe = multiply & ~mul_start;
+// Strobe is a pulse that is high for one cycle indicating the start of a
+// multiplication operation.
+assign mul_start_strobe = mul_activate & ~mul_start;
 
 multiplier multiplier0 (
   .clk(clk),
@@ -129,26 +141,33 @@ multiplier multiplier0 (
 );
 
 // Divider
+logic div_stall;
+logic divide_by_0;
 logic [31:0] div_fout;
-logic        div_stall;
-logic        divide_by_0;
-logic        divide;
-assign       divide = (id_stage_reg.ex_ctrl.func_mux == div_out);
+
+// Current operation is a division
+logic divide;
+assign divide = (id_stage_reg.ex_ctrl.func_mux == div_out);
+
+// Activate a multiply operation during a multiplication instruction.
+// If there is a forward condition from memory wait until dmem_response.
+logic div_activate;
+assign div_activate = (divide && !mem_forward) || (divide && !dmem_stall);
 
 // Pulse the divide start signal
 logic div_start;
 logic div_start_strobe;
 always_ff @(posedge clk) begin
-  // Restart upon next pipeline stage
   if (rst || !ex_stall) begin
     div_start <= 1'b0;
   end
-  // Check for divide instruction
-  else if (divide) begin
+  else if (div_activate) begin
     div_start <= 1'b1;
   end
 end
 
+// Strobe is a pulse that is high for one cycle indicating the start of a
+// division operation.
 assign div_start_strobe = divide & ~div_start;
 
 divider divider0 (
@@ -172,8 +191,13 @@ cmp cmp0 (
   .br_en (br_en)
 );
 
-// Functional Unit Logic
-assign func_stall = mul_stall | div_stall;
+// Functional stall logic
+// Wait for data memory if we are forwarding from memory during a divide 
+// or multiply operation
+logic wait_stall;
+assign wait_stall = (multiply | divide) & mem_forward & dmem_stall;
+
+assign func_stall = mul_stall | div_stall | wait_stall;
 
 // ALU Output Logic
 logic [31:0] func_out;
@@ -226,7 +250,6 @@ assign o_flush = branch_taken;
 always_ff @(posedge clk) begin
   if (rst) begin
     // Reset Pipeline Registers
-    ex_stage_reg.pc_next   <= '0;
     ex_stage_reg.func_out  <= '0;
     ex_stage_reg.rs2_rdata <= '0;
     ex_stage_reg.rd_addr   <= '0;

@@ -75,7 +75,6 @@ end
 always_ff @(posedge clk) begin
   if (rst) begin
     // Reset Pipeline Registers
-    mem_stage_reg.pc_next    <= '0;
     mem_stage_reg.rd_addr    <= '0;
     mem_stage_reg.func_out   <= '0;
     mem_stage_reg.mem_ctrl   <= '0;

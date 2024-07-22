@@ -49,18 +49,13 @@ class randInstr;
       instr.r_type.opcode == op_reg;
 
       // Adjust Funct7 for M and I extension variants
-// srr
-      if (instr.r_type.funct3 inside {addr} ) {
+      if (instr.r_type.funct3 inside {addr, srr} ) {
         instr.r_type.funct7 inside {base, variant, mult_variant};
-      } else if (instr.r_type.funct3 inside {sllr, sltr, sltru}) {
+      } else if (instr.r_type.funct3 inside {sllr, sltr, sltru, xorr, orr, andr}) {
         instr.r_type.funct7 inside {base, mult_variant};
       } else {
         instr.r_type.funct7 == base;
       }
-
-//       xorr
-// orr
-// andr
     }
 
     // Store instructions -- these are easy to constrain!

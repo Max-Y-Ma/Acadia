@@ -57,7 +57,7 @@ always_ff @(posedge clk) begin
     dmem_rdata_buffer <= '0;
   end 
   // If we are stalled, buffer the newest data from memory
-  else if (wb_stall && dmem_resp) begin
+  else if (wb_stall && mem_stage_reg.mem_ctrl.mem_read && dmem_resp) begin
     dmem_rdata_buffer <= dmem_rdata;
   end
 end

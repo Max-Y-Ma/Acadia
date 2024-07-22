@@ -1,7 +1,7 @@
 module divider
 import rv32imc_types::*;
 # (
-  parameter NUM_CYCLES = 16
+  parameter NUM_CYCLES = 8
 ) (
   input logic clk, rst,
 
@@ -53,7 +53,7 @@ DW_div_seq #(
   .clk(clk),
   .rst_n(~rst),
   .hold(~div_busy),
-  .start(start & ~div_busy),
+  .start(start),
   .a(a),
   .b(b),
   .complete(udiv_valid),
@@ -72,7 +72,7 @@ DW_div_seq #(
   .clk(clk),
   .rst_n(~rst),
   .hold(~div_busy),
-  .start(start & ~div_busy),
+  .start(start),
   .a(a),
   .b(b),
   .complete(sdiv_valid),

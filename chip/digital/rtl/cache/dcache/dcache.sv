@@ -180,7 +180,7 @@ import cache_types::*;
       end
 
       // Cache Hit/WB and Data Logic and
-      cache_hit       = |cache_hit_vector;
+      cache_hit = |cache_hit_vector;
 
       // Update eviction logic when cache is replying
       evict_update = ~ufp_resp;

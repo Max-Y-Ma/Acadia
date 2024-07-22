@@ -217,7 +217,6 @@ typedef struct packed {
 
   // Datapath Signals
   logic [31:0] func_out;
-  logic [31:0] pc_next;
 
   // Control Signals
   logic [4:0]  rd_addr;
@@ -231,7 +230,6 @@ typedef struct packed {
 
   // Data Signals
   logic [31:0] func_out;
-  logic [31:0] pc_next;
 
   // Control Signals
   logic [4:0]  rd_addr;
