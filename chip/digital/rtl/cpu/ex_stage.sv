@@ -90,7 +90,9 @@ end
 logic mem_forward;
 assign mem_forward = (fwd_src_a == mem_source) | (fwd_src_b == mem_source);
 
+////////////////////////////////////////////////////////////////////////////////
 // Arithmetic Logic Unit
+////////////////////////////////////////////////////////////////////////////////
 logic [31:0] alu_fout;
 alu alu0 (
   .a        (a),
@@ -99,7 +101,9 @@ alu alu0 (
   .alu_fout (alu_fout)
 );
 
+////////////////////////////////////////////////////////////////////////////////
 // Multiplier
+////////////////////////////////////////////////////////////////////////////////
 logic mul_stall;
 logic [31:0] mul_fout;
 
@@ -140,7 +144,9 @@ multiplier multiplier0 (
   .mul_stall(mul_stall)
 );
 
+////////////////////////////////////////////////////////////////////////////////
 // Divider
+////////////////////////////////////////////////////////////////////////////////
 logic div_stall;
 logic divide_by_0;
 logic [31:0] div_fout;
@@ -182,8 +188,15 @@ divider divider0 (
   .divide_by_0(divide_by_0)
 );
 
+////////////////////////////////////////////////////////////////////////////////
 // Comparator
+////////////////////////////////////////////////////////////////////////////////
 logic br_en;
+
+// Current operation is a branch
+logic branch;
+assign branch = id_stage_reg.ex_ctrl.branch;
+
 cmp cmp0 (
   .a (a),
   .b (b),
@@ -192,10 +205,10 @@ cmp cmp0 (
 );
 
 // Functional stall logic
-// Wait for data memory if we are forwarding from memory during a divide 
-// or multiply operation
+// Wait for data memory if we are forwarding from memory during a divide,
+// multiply, or branch operation
 logic wait_stall;
-assign wait_stall = (multiply | divide) & mem_forward & dmem_stall;
+assign wait_stall = (multiply | divide | branch) & mem_forward & dmem_stall;
 
 assign func_stall = mul_stall | div_stall | wait_stall;
 
@@ -221,7 +234,7 @@ end
 
 // Branch Logic
 logic  branch_taken;
-assign branch_taken = id_stage_reg.ex_ctrl.branch & br_en;
+assign branch_taken = !wait_stall ? (branch & br_en) : 1'b0;
 
 logic [31:0] base_addr, target_addr, pc_imm;
 always_comb begin

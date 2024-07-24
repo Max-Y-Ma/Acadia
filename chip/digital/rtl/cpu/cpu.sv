@@ -66,6 +66,7 @@ if_stage if_stage0 (
   .i_pc_offset  (pc_offset),
   .i_flush      (flush),
   .if_stall     (if_stall),
+  .id_stall     (id_stall),
   .imem_addr    (imem_addr),
   .imem_rmask   (imem_rmask),
   .if_stage_reg (if_stage_reg)

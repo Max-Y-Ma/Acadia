@@ -33,8 +33,9 @@ import rv32imc_types::*;
 logic imem_busy;
 always_ff @(posedge clk) begin
   // We are not busy if there is a instruction memory response but we are
-  // still stalled because of other conditions
-  if (rst || (imem_resp & (id_stall || load_hazard))) begin
+  // still stalled because of other conditions. However, we must stall busy
+  // until the imem_response occurs, especially during a flush cycle.
+  if (rst || (imem_resp && (id_stall || load_hazard || i_flush))) begin
     imem_busy <= 1'b0;
   end 
   // We are busy if there is a current read from instruction memory or a 
@@ -51,7 +52,7 @@ assign imem_stall = imem_busy & !imem_resp;
 logic [31:0] inst, inst_buffer;
 always_ff @(posedge clk) begin
   // If we get flushed, reset the instruction buffer
-  if (rst) begin
+  if (rst || i_flush) begin
     inst_buffer <= '0;
   end 
   // If we are stalled, buffer the newest instruction data from memory
@@ -82,7 +83,7 @@ logic [31:0]  imm;
 ex_ctrl_t     ex_ctrl;
 mem_ctrl_t    mem_ctrl;
 wb_ctrl_t     wb_ctrl;
-control_unit control_unit0 (
+decoder decoder0 (
   .inst(inst),
   .o_rs1_addr(rs1_addr),
   .o_rs2_addr(rs2_addr),

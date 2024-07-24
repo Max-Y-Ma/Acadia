@@ -1,4 +1,4 @@
-module control_unit
+module decoder
 import rv32imc_types::*;
 (
   // Datapath Signals
@@ -513,4 +513,4 @@ always_comb begin
   endcase
 end
 
-endmodule : control_unit
+endmodule : decoder

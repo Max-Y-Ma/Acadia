@@ -3,17 +3,18 @@ module if_stage
 import rv32imc_types::*;
 (
   // Synchronous Signals
-  input  logic clk, rst,
+  input logic clk, rst,
 
   // Control/Datapath Signals
-  input  pc_mux_t     i_pc_mux,
-  input  logic [31:0] i_pc_offset,
+  input pc_mux_t     i_pc_mux,
+  input logic [31:0] i_pc_offset,
 
   // Flush Signals
-  input  logic i_flush,
+  input logic i_flush,
 
   // Stall Signals
-  input  logic if_stall,
+  input logic if_stall,
+  input logic id_stall,
 
   // Instruction Memory Ports
   output logic [31:0] imem_addr,
@@ -31,14 +32,10 @@ always_ff @(posedge clk) begin
   if (rst) begin
     pc <= 32'h60000000;
   end
-  // TODO: Rewrite to account for new compression next instruction issue.
-  // During a flush cycle, the target address will be read from memory. So the
+  // As long as we are not stalled, we can load the next program counter 
+  // address During a flush cycle, the target address will be read from memory. So the
   // program counter should be set to the next instruction from the target
-  // address
-  else if (i_flush && !if_stall) begin
-    pc <= pc_next + 'd4;
-  end
-  // Otherwise, we can set program counter to next state
+  // address. Otherwise, we can set program counter to next state.
   else if (!if_stall) begin
     pc <= pc_next;
   end
@@ -48,32 +45,33 @@ end
 // Branching takes the most priority since we jump to offset address and flush
 // Otherwise we increment by two if the previous instruction was compressed
 // Else we increment by four for a normal instruction
-assign pc_next = (i_pc_mux == pc_offset) ? (i_pc_offset) : (pc + 'd4);
+always_comb begin
+  pc_next = (i_pc_mux == pc_offset) ? (i_pc_offset) : (pc + 'd4);
+end
 
-// TODO: Rewrite to account for new compression next instruction issue.
-// Assign instruction memory address to the branch target address during a 
-// flush cycle in which a branch was taken, otherwise just the current pc.
-assign imem_addr = i_flush ? pc_next : pc;
+;// Assign instruction memory address to the program counter. 
+assign imem_addr = pc;
  
-// Assert read mask unless we are stalled
-assign imem_rmask = (!if_stall) ? 4'hF : 4'b0;
+// Assert read mask unless we are stalled or flush cycle. We don't fetch a new
+// instruction during a flush cycle.
+assign imem_rmask = (!if_stall & !i_flush) ? 4'hF : 4'b0;
 
 // Latch to Pipeline Registers
 always_ff @(posedge clk) begin
-  if (rst) begin
+  if (rst || (i_flush & !id_stall)) begin
     // Reset Pipeline Registers
     if_stage_reg.pc      <= '0;
     if_stage_reg.pc_next <= '0;
     if_stage_reg.rvfi    <= '0;
   end else if (!if_stall) begin
     // Latch Program Counters
-    if_stage_reg.pc      <= imem_addr;
-    if_stage_reg.pc_next <= imem_addr + 'd4;
+    if_stage_reg.pc      <= pc;
+    if_stage_reg.pc_next <= pc_next;
 
     // Latch RVFI Signals
     if_stage_reg.rvfi.valid    <= 1'b1;
-    if_stage_reg.rvfi.pc_rdata <= imem_addr;
-    if_stage_reg.rvfi.pc_wdata <= imem_addr + 'd4;
+    if_stage_reg.rvfi.pc_rdata <= pc;
+    if_stage_reg.rvfi.pc_wdata <= pc_next;
   end
 end
 
