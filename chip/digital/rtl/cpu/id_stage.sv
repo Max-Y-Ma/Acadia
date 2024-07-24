@@ -82,7 +82,7 @@ logic [31:0]  imm;
 ex_ctrl_t     ex_ctrl;
 mem_ctrl_t    mem_ctrl;
 wb_ctrl_t     wb_ctrl;
-control_unit control_unit0 (
+decoder decoder0 (
   .inst(inst),
   .o_rs1_addr(rs1_addr),
   .o_rs2_addr(rs2_addr),
