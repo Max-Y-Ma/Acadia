@@ -19,4 +19,4 @@ if not all([set(x) <= allowed_char for x in j["dw_ip"]]):
     print("illegal character in options.json", file=sys.stderr)
     exit(1)
 
-print(' '.join([os.environ["DW"] + '/sim_ver/' + x + '.v' for x in j['dw_ip']]))
+print(' '.join(['/software/Synopsys-2021_x86_64/syn/R-2020.09-SP4/dw/sim_ver/' + x + '.v' for x in j['dw_ip']]))
