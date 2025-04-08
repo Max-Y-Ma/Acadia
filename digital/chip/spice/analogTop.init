@@ -1,0 +1,5 @@
+choose finesim -np 6 /home/jjyun4/acadia/digital/chip/spice/analog_top_mixed.spi;
+use_spice -cell analog_top_mixed;
+set bus_format <%d>;
+a2d loth=0.20 hith=0.80;
+port_dir -cell analog_top_mixed (input rst; input clk; input adc_en; input calib_en; input ext_opt; input firm_en; output eoc_n; output q; output vin; output vip; output real_vdd_half; input dac_in);

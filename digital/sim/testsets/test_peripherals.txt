@@ -1,0 +1,5 @@
+../chip/testcode/soc/src/gpio_test.c nospike
+../chip/testcode/soc/src/i2c_test.c nospike
+../chip/testcode/RSA_integrate.s nospike
+../chip/testcode/soc/src/uart_test.c nospike
+../chip/testcode/soc/src/analog_test.c nospike

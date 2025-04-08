@@ -1,0 +1,10 @@
+#
+FilenameExt	Key	CommandPVT	PVTHelp	PVTDescr
+S	S	S	S	S
+ss_0p90v_0p90v_125c	ss_0p90v_0p90v_125c	ss_0p90v_0p90v_125c	ss, 0.9V, 125\u00b0C	ss_0p90v_0p90v_125c
+ss_0p90v_0p90v_m40c	ss_0p90v_0p90v_m40c	ss_0p90v_0p90v_m40c	ss, 0.9V, -40\u00b0C	ss_0p90v_0p90v_m40c
+tt_1p00v_1p00v_25c	tt_1p00v_1p00v_25c	tt_1p00v_1p00v_25c	tt, 1.0V, 25\u00b0C	tt_1p00v_1p00v_25c
+ff_1p10v_1p10v_125c	ff_1p10v_1p10v_125c	ff_1p10v_1p10v_125c	ff, 1.1V, 125\u00b0C	ff_1p10v_1p10v_125c
+ff_1p10v_1p10v_0c	ff_1p10v_1p10v_0c	ff_1p10v_1p10v_0c	ff, 1.1V, 0\u00b0C	ff_1p10v_1p10v_0c
+ff_1p10v_1p10v_m40c	ff_1p10v_1p10v_m40c	ff_1p10v_1p10v_m40c	ff, 1.1V, -40\u00b0C	ff_1p10v_1p10v_m40c
+

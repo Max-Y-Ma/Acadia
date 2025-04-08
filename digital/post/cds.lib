@@ -1,0 +1,11 @@
+SOFTINCLUDE /ece498hk/libs/T65GP_RFMIM_2fF_1P0V_2P5V_1p9m_6X1Z1U_ALRDL_OA61_PDK/cds.lib
+SOFTINCLUDE /software/cadence-2023-05/ICADVM201/share/cdssetup/cds.lib
+SOFTINCLUDE $CADENCE_CURR_IUS/tools/inca/files/cds.lib
+
+DEFINE ece498hk_s22_t65_shared_lib ~/acadia/digital/post/lib/ioring
+
+
+DEFINE data_sram /home/sgohil3/acadia/digital/post/data_sram
+DEFINE icache_sram /home/sgohil3/acadia/digital/post/icache_sram
+#Removed by ddDeleteObj: DEFINE POST_PNR /home/sgohil3/acadia/digital/post/lib/POST_PNR
+DEFINE POST_PNR /home/sgohil3/acadia/digital/post/POST_PNR

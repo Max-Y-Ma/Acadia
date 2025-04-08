@@ -1,0 +1,15 @@
+# From Stan example PNR gitignore
+pnr/.cadence
+pnr/.viaViol.*
+pnr/.nfs*
+pnr/*.cmd*
+pnr/*.log*
+pnr/*.rpt*
+pnr/AAE_sensitivity.file
+pnr/rc_model.bin
+pnr/pnrout
+pnr/timingReports
+pnr/logs
+pnr/saves
+pnr/checkDesign
+pnr/VoltusPowerAnalysisResults

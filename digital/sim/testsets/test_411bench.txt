@@ -1,0 +1,7 @@
+../chip/testcode/soc/benchmarks/rsa.c
+../chip/testcode/soc/benchmarks/fft.c
+../chip/testcode/soc/benchmarks/mergesort.c
+../chip/testcode/soc/benchmarks/graph.c
+../chip/testcode/soc/benchmarks/physics.c
+../chip/testcode/soc/benchmarks/raytracing.c
+../chip/testcode/soc/benchmarks/sudoku.c

@@ -1,0 +1,5 @@
+TDMCHECKPOINT="1.0"
+ece498hk_s22_t65_shared_lib/PAD_RING_1000X1000 type="cell"
+ece498hk_s22_t65_shared_lib/PAD_RING_RAILSROUTING_1000x1000 type="cell"
+ece498hk_s22_t65_shared_lib/SEALRING_1000X1000 type="cell"
+keepEmptyCategory type="unknown"

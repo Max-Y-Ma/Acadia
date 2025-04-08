@@ -1,0 +1,16 @@
+#
+# Edit Lock-Stake file. CAUTION: Please do not change.
+#
+# Information about current Edit Lock Owner.
+#
+LockStakeVersion               1.1
+LoginName                      sgohil3
+HostName                       ece-498hk-03.ece.illinois.edu
+ProcessIdentifier              122277
+ProcessCreationTime_UTC        1731461598
+ProcessCreationTime_Readable   Tue Nov 12 19:33:18 2024 CST
+AppIdentifier                  OA File System Design Manager
+OSType                         unix
+ReasonForPlacingEditLock       OpenAccess edit lock
+FilePathUsedToEditLock         /home/sgohil3/acadia/digital/post/lib/ioring/ESD_DIODES/layout/layout.oa.cdslck
+TimeEditLocked                 Tue Nov 12 19:41:58 2024 CST

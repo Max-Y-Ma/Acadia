@@ -1,0 +1,5 @@
+digital/pnr/outputs/innovus.gdsii filter=lfs diff=lfs merge=lfs -text
+digital/_pnr/files/qrc.tch filter=lfs diff=lfs merge=lfs -text
+digital/bin/tools/libexec/gcc/riscv32-unknown-elf/7.2.0/cc1 filter=lfs diff=lfs merge=lfs -text
+digital/bin/tools/libexec/gcc/riscv32-unknown-elf/7.2.0/cc1plus filter=lfs diff=lfs merge=lfs -text
+digital/bin/tools/libexec/gcc/riscv32-unknown-elf/7.2.0/lto1 filter=lfs diff=lfs merge=lfs -text

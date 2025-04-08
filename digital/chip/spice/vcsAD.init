@@ -1,0 +1,6 @@
+choose finesim /home/jjyun4/acadia/digital/chip/spice/adc.spi;
+use_spice -cell adc_mixed_tb;
+set bus_format <%d>;
+a2d loth=0.35 hith=0.65;
+
+port_dir -cell adc_mixed_tb (input adc_en; input calib_en; input eoc_n; input ext_opt; input firm_en; input rst; input clk; output adc_out);

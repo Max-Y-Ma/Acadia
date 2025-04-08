@@ -1,0 +1,7 @@
+# Confidential Information of ARM Physical IP, Inc.  Use subject to ARM Physical IP, Inc. license.  Copyright (c) 1993-2009 ARM Physical IP, Inc.
+# Distributed only by explicit permission.
+#
+FilenameExt	Key	CommandPVT	PVTHelp	PVTDescr
+S	S	S	S	S
+ff_1p10v_1p10v_0c	ff_1p10v_1p10v_0c	ff_1p10v_1p10v_0c	ff, 1.10V, 0\u00b0C	ff_1p10v_1p10v_0c
+
